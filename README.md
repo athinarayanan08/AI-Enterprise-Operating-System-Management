@@ -4,7 +4,6 @@
 
 Final Year Project — [Your Name] | [Department] | [College Name] | 2026
 
----
 
 ## 📌 Overview
 
@@ -43,7 +42,6 @@ Example: *"Remind me to call the supplier tomorrow at 10am and draft a follow-up
 | Execution summary | Plain-language report of what was completed |
 | Session log / transparency view | Shows the plan and each tool call for full visibility |
 
----
 
 ## 🏗️ System Architecture
 
