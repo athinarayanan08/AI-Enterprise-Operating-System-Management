@@ -38,9 +38,12 @@ export const api = {
   // Auth
   login: (email, password) =>
     request("/api/auth/login", { method: "POST", body: { email, password }, auth: false }),
+  register: (payload) =>
+    request("/api/auth/register", { method: "POST", body: payload, auth: false }),
 
   // Users
   getUsers: () => request("/api/users"),
+  createUser: (payload) => request("/api/users", { method: "POST", body: payload }),
   updateUser: (id, patch) => request(`/api/users/${id}`, { method: "PATCH", body: patch }),
 
   // Audit

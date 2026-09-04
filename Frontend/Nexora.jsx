@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { api, setToken } from "./api";
 import {
   LayoutGrid, Sparkles, BookOpen, FileText, Inbox, CheckSquare, ListChecks,
   BarChart3, FileBarChart, Users, ShieldCheck, SlidersHorizontal, Search,
   Bell, HelpCircle, ChevronDown, ChevronRight, Menu, X, Plus, Paperclip,
   ArrowUpRight, Send, Copy, RotateCcw, Bookmark, Share2, ThumbsUp, ThumbsDown,
   Filter, Download, MoreHorizontal, Lock, ArrowLeft, Command as CommandIcon, LogOut,
-  Eye, EyeOff,
 } from "lucide-react";
 
 /* ============================== DESIGN TOKENS ============================== */
@@ -44,8 +42,59 @@ const FONTS = `
 @media (prefers-reduced-motion: reduce) { .nx-fade { animation: none; } }
 `;
 
-/* ============================== STATIC CONFIG ============================== */
+/* ============================== MOCK DATA ============================== */
 const DEPARTMENTS = ["Engineering", "Finance", "Operations", "Human Resources", "Sales", "Marketing", "Product", "Legal"];
+
+const PEOPLE = [
+  { id: 1, name: "Meera Krishnan", dept: "Engineering", role: "Admin", status: "Active", usage: 87, last: "2 min ago" },
+  { id: 2, name: "Arun Kumar", dept: "Engineering", role: "Employee", status: "Active", usage: 64, last: "12 min ago" },
+  { id: 3, name: "Priya Chandran", dept: "Finance", role: "Manager", status: "Active", usage: 52, last: "1 hr ago" },
+  { id: 4, name: "Karthik Ramasamy", dept: "Sales", role: "Employee", status: "Away", usage: 31, last: "3 hr ago" },
+  { id: 5, name: "Divya Suresh", dept: "Human Resources", role: "Manager", status: "Active", usage: 45, last: "5 min ago" },
+  { id: 6, name: "Vignesh Raja", dept: "Product", role: "Employee", status: "Active", usage: 71, last: "just now" },
+  { id: 7, name: "Ananya Iyer", dept: "Legal", role: "Employee", status: "Offline", usage: 12, last: "yesterday" },
+  { id: 8, name: "Rahul Mehta", dept: "Marketing", role: "Employee", status: "Active", usage: 58, last: "20 min ago" },
+];
+
+const AUDIT_EVENTS = [
+  { id: 1, user: "Arun Kumar", action: "AI Assistant accessed", resource: "General Assistant", time: "10:42 AM", result: "Success" },
+  { id: 2, user: "Priya Chandran", action: "Document queried", resource: "Q3-Financials.pdf", time: "10:31 AM", result: "Success" },
+  { id: 3, user: "Meera Krishnan", action: "AI configuration updated", resource: "Code Assistant", time: "09:58 AM", result: "Success" },
+  { id: 4, user: "Divya Suresh", action: "Role changed", resource: "Karthik Ramasamy", time: "09:20 AM", result: "Success" },
+  { id: 5, user: "Vignesh Raja", action: "Approval submitted", resource: "Document Intelligence access", time: "08:47 AM", result: "Pending" },
+  { id: 6, user: "Ananya Iyer", action: "User signed in", resource: "—", time: "08:02 AM", result: "Success" },
+];
+
+const ASSISTANTS = [
+  { id: "general", name: "General Assistant", desc: "Company-wide conversational AI", usage: "42%", available: true },
+  { id: "docs", name: "Document Intelligence", desc: "Search and reason over company knowledge", usage: "31%", available: true },
+  { id: "code", name: "Code Assistant", desc: "Engineering workspace copilot", usage: "18%", available: true },
+  { id: "data", name: "Data Analyst", desc: "Turns raw data into insight", usage: "9%", available: false },
+  { id: "research", name: "Research Assistant", desc: "Deep multi-source research", usage: "—", available: false },
+];
+
+const APPROVALS = [
+  { id: 1, name: "Arun Kumar", dept: "Engineering", request: "Document Intelligence access", when: "Today · 10:42 AM" },
+  { id: 2, name: "Rahul Mehta", dept: "Marketing", request: "Increased AI usage quota", when: "Today · 9:15 AM" },
+  { id: 3, name: "Ananya Iyer", dept: "Legal", request: "Research Assistant access", when: "Yesterday · 4:52 PM" },
+];
+
+const CONVERSATIONS = {
+  Today: ["Q3 sales analysis", "Employee handbook summary"],
+  Yesterday: ["Project architecture notes"],
+  "Previous 7 days": ["SQL query optimization", "Vendor contract review"],
+};
+
+const SOURCES = [
+  { title: "Employee Handbook.pdf", page: 24, relevance: 94 },
+  { title: "Q3-Financials.pdf", page: 6, relevance: 81 },
+];
+
+const NOTIFICATIONS = [
+  { id: 1, cat: "Approvals", title: "New request from Arun Kumar", desc: "Document Intelligence access", time: "5m", unread: true },
+  { id: 2, cat: "AI Activity", title: "Weekly usage report ready", desc: "Engineering team", time: "1h", unread: true },
+  { id: 3, cat: "System", title: "Scheduled maintenance", desc: "Sunday, 2:00 AM IST", time: "3h", unread: false },
+];
 
 const NAV = {
   Admin: [
@@ -64,6 +113,12 @@ const NAV = {
     { group: "Intelligence", items: [{ id: "ai", label: "AI Assistant", icon: Sparkles }, { id: "docs", label: "Documents", icon: FileText }] },
     { group: "Workflow", items: [{ id: "requests", label: "Requests", icon: CheckSquare }, { id: "tasks", label: "Tasks", icon: ListChecks }] },
   ],
+};
+
+const USERS_BY_ROLE = {
+  Admin: { name: "Meera Krishnan", dept: "Engineering" },
+  Manager: { name: "Divya Suresh", dept: "Human Resources" },
+  Employee: { name: "Aathi Suresh", dept: "Product" },
 };
 
 /* ============================== SMALL PRIMITIVES ============================== */
@@ -373,24 +428,6 @@ function CommandPalette({ open, onClose, setView }) {
 
 /* ============================== NOTIFICATION DRAWER ============================== */
 function NotificationDrawer({ open, onClose }) {
-  const [notifications, setNotifications] = useState([]);
-
-  useEffect(() => {
-    if (!open) return;
-    api.getNotifications().then(setNotifications).catch(console.error);
-  }, [open]);
-
-  async function handleClick(n) {
-    if (n.unread) {
-      try {
-        await api.markNotificationRead(n.id);
-        setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, unread: false } : x)));
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
-
   return (
     <div className={`fixed inset-0 z-[60] ${open ? "" : "pointer-events-none"}`}>
       <div onClick={onClose} className="absolute inset-0 transition-opacity duration-200" style={{ background: "#0B122055", opacity: open ? 1 : 0 }} />
@@ -400,18 +437,15 @@ function NotificationDrawer({ open, onClose }) {
           <button onClick={onClose}><X size={17} /></button>
         </div>
         <div className="overflow-y-auto nx-scroll" style={{ height: "calc(100% - 60px)" }}>
-          {notifications.length === 0 && (
-            <div className="px-5 py-8 text-[13px]" style={{ color: C.textMuted }}>No notifications.</div>
-          )}
-          {notifications.map((n) => (
-            <div key={n.id} onClick={() => handleClick(n)} className="px-5 py-4 flex gap-3 cursor-pointer" style={{ borderBottom: `1px solid ${C.border}` }}>
+          {NOTIFICATIONS.map((n) => (
+            <div key={n.id} className="px-5 py-4 flex gap-3" style={{ borderBottom: `1px solid ${C.border}` }}>
               <div className="mt-1.5">{n.unread && <span className="block w-1.5 h-1.5 rounded-full" style={{ background: C.gold }} />}</div>
               <div className="flex-1">
-                <div className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: C.gold }}>{n.category}</div>
+                <div className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: C.gold }}>{n.cat}</div>
                 <div className="text-[13.5px] font-medium mt-0.5">{n.title}</div>
-                <div className="text-[12.5px]" style={{ color: C.textMuted }}>{n.description}</div>
+                <div className="text-[12.5px]" style={{ color: C.textMuted }}>{n.desc}</div>
               </div>
-              <div className="text-[11px] shrink-0" style={{ color: C.textMuted }}>{new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+              <div className="text-[11px] shrink-0" style={{ color: C.textMuted }}>{n.time}</div>
             </div>
           ))}
         </div>
@@ -421,45 +455,9 @@ function NotificationDrawer({ open, onClose }) {
 }
 
 /* ============================== DATA TABLE (People) ============================== */
-function PeopleTable({ editable, filters, refreshKey, onDataLoaded }) {
-  const [people, setPeople] = useState([]);
+function PeopleTable({ editable }) {
   const [openRow, setOpenRow] = useState(null);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    api.getUsers()
-      .then((rows) => {
-        const mapped = rows.map((u) => ({
-          id: u.id, name: u.name, dept: u.dept, role: u.role, status: u.status,
-          usage: u.usage_percent, last: u.last_active,
-        }));
-        setPeople(mapped);
-        onDataLoaded?.(mapped);
-      })
-      .catch(console.error);
-  }, [refreshKey]);
-
-  const visiblePeople = people.filter((p) => {
-    if (filters?.dept && filters.dept !== "All" && p.dept !== filters.dept) return false;
-    if (filters?.role && filters.role !== "All" && p.role !== filters.role) return false;
-    if (filters?.status && filters.status !== "All" && p.status !== filters.status) return false;
-    return true;
-  });
-
-  const person = people.find((p) => p.id === openRow);
-
-  async function handleRoleChange(newRole) {
-    setSaving(true);
-    try {
-      const updated = await api.updateUser(person.id, { role: newRole });
-      setPeople((prev) => prev.map((p) => (p.id === person.id ? { ...p, role: updated.role, status: updated.status, dept: updated.dept } : p)));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  }
-
+  const person = PEOPLE.find((p) => p.id === openRow);
   return (
     <div className="relative">
       <Card className="overflow-hidden">
@@ -472,13 +470,7 @@ function PeopleTable({ editable, filters, refreshKey, onDataLoaded }) {
             </tr>
           </thead>
           <tbody>
-            {people.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-6 text-center" style={{ color: C.textMuted }}>Loading users…</td></tr>
-            )}
-            {people.length > 0 && visiblePeople.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-6 text-center" style={{ color: C.textMuted }}>No users match the selected filters.</td></tr>
-            )}
-            {visiblePeople.map((p) => (
+            {PEOPLE.map((p) => (
               <tr key={p.id} className="group cursor-pointer" style={{ borderTop: `1px solid ${C.border}` }} onClick={() => setOpenRow(p.id)}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5"><Avatar name={p.name} size={28} /><span className="font-medium">{p.name}</span></div>
@@ -501,7 +493,7 @@ function PeopleTable({ editable, filters, refreshKey, onDataLoaded }) {
           <div className="nx-fade absolute right-0 top-0 h-full w-full max-w-sm bg-white p-6 overflow-y-auto" style={{ borderLeft: `1px solid ${C.border}` }}>
             <button onClick={() => setOpenRow(null)} className="mb-6 flex items-center gap-1 text-[13px]" style={{ color: C.textMuted }}><ArrowLeft size={14} />Close</button>
             <div className="flex items-center gap-3 mb-6"><Avatar name={person.name} size={48} /><div><div className="nx-serif text-[19px]">{person.name}</div><div className="text-[13px]" style={{ color: C.textMuted }}>{person.dept}</div></div></div>
-            {[["Role", editable ? <select disabled={saving} defaultValue={person.role} onChange={(e) => handleRoleChange(e.target.value)} className="text-[13px] px-2 py-1 rounded" style={{ border: `1px solid ${C.border}` }}><option>Admin</option><option>Manager</option><option>Employee</option></select> : person.role],
+            {[["Role", editable ? <select defaultValue={person.role} className="text-[13px] px-2 py-1 rounded" style={{ border: `1px solid ${C.border}` }}><option>Admin</option><option>Manager</option><option>Employee</option></select> : person.role],
               ["Status", <span className="inline-flex items-center gap-1.5"><StatusDot status={person.status} />{person.status}</span>],
               ["AI usage this month", `${person.usage}%`],
               ["Last login", person.last]].map(([k, v]) => (
@@ -518,17 +510,6 @@ function PeopleTable({ editable, filters, refreshKey, onDataLoaded }) {
 
 /* ============================== ADMIN DASHBOARD ============================== */
 function AdminDashboard() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    api.getDashboard("admin").then(setData).catch(console.error);
-  }, []);
-
-  if (!data) return <div className="nx-fade text-[13px]" style={{ color: C.textMuted }}>Loading dashboard…</div>;
-
-  const activityChart = data.activity_30d.map((v) => ({ v }));
-  const avgSessions = Math.round(data.activity_30d.reduce((a, b) => a + b, 0) / data.activity_30d.length);
-
   return (
     <div className="nx-fade">
       <SectionHeading eyebrow="Enterprise Overview" title="Your enterprise, in one view." subtitle="Monitor the intelligence environment across your organization." right={<div className="text-[12px] text-right" style={{ color: C.textMuted }}>System status<br /><span style={{ color: C.green }}>● Operational</span></div>} />
@@ -540,7 +521,7 @@ function AdminDashboard() {
         </Card>
         <Card className="p-6">
           <div className="text-[11px] font-semibold tracking-[0.1em] uppercase mb-3" style={{ color: C.textMuted }}>AI environment status</div>
-          {[["System health", data.system_health], ["AI services", "5/5 online"], ["Active users", data.total_users], ["Security", "No incidents"]].map(([k, v]) => (
+          {[["System health", "99.98%"], ["AI services", "5/5 online"], ["Active users", "347"], ["Security", "No incidents"]].map(([k, v]) => (
             <div key={k} className="flex items-center justify-between py-2 text-[13px]" style={{ borderTop: `1px solid ${C.border}` }}>
               <span style={{ color: C.textMuted }}>{k}</span><span className="font-medium">{v}</span>
             </div>
@@ -549,27 +530,27 @@ function AdminDashboard() {
       </div>
 
       <div className="flex flex-wrap gap-4 mb-4">
-        <MetricHero label="Total users" value={data.total_users} delta="+8.4%" />
-        <MetricHero label="Active AI sessions" value={data.active_ai_sessions} delta="+12.7%" />
-        <MetricHero label="System health" value={data.system_health} delta="Operational" />
-        <MetricHero label="Pending approvals" value={data.pending_approvals} delta="Needs attention" />
+        <MetricHero label="Total users" value="1,284" delta="+8.4%" />
+        <MetricHero label="Active AI sessions" value="347" delta="+12.7%" />
+        <MetricHero label="System health" value="99.98%" delta="Operational" />
+        <MetricHero label="Pending approvals" value="24" delta="Needs attention" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <Card className="lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="text-[13px] font-semibold">AI activity — 30 days</div>
-            <span className="text-[11px]" style={{ color: C.textMuted }}>Avg. {avgSessions} sessions/day</span>
+            <span className="text-[11px]" style={{ color: C.textMuted }}>Avg. 42 sessions/day</span>
           </div>
-          <MiniBars data={activityChart} />
+          <MiniBars data={ACTIVITY_30D} />
         </Card>
         <Card className="p-6">
           <div className="text-[13px] font-semibold mb-4">Most used assistants</div>
-          {data.most_used_assistants.map((a) => (
+          {ASSISTANTS.slice(0, 4).map((a) => (
             <div key={a.id} className="mb-3">
-              <div className="flex justify-between text-[12.5px] mb-1"><span>{a.name}</span><span style={{ color: C.textMuted }}>{a.usage_percent}%</span></div>
+              <div className="flex justify-between text-[12.5px] mb-1"><span>{a.name}</span><span style={{ color: C.textMuted }}>{a.usage}</span></div>
               <div className="h-1 rounded-full" style={{ background: C.cream }}>
-                <div className="h-1 rounded-full" style={{ width: `${a.usage_percent}%`, background: C.gold }} />
+                <div className="h-1 rounded-full" style={{ width: a.usage === "—" ? "0%" : a.usage, background: C.gold }} />
               </div>
             </div>
           ))}
@@ -578,12 +559,12 @@ function AdminDashboard() {
 
       <Card className="p-6">
         <div className="text-[13px] font-semibold mb-4">Recent enterprise activity</div>
-        {data.recent_activity.map((e) => (
+        {AUDIT_EVENTS.slice(0, 4).map((e) => (
           <div key={e.id} className="flex items-center gap-3 py-2.5 text-[13px]" style={{ borderTop: `1px solid ${C.border}` }}>
             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: C.gold }} />
-            <span className="font-medium">{e.user_name}</span>
+            <span className="font-medium">{e.user}</span>
             <span style={{ color: C.textMuted }}>{e.action.toLowerCase()}</span>
-            <span className="flex-1 text-right text-[11.5px]" style={{ color: C.textMuted }}>{new Date(e.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            <span className="flex-1 text-right text-[11.5px]" style={{ color: C.textMuted }}>{e.time}</span>
           </div>
         ))}
       </Card>
@@ -591,162 +572,37 @@ function AdminDashboard() {
   );
 }
 
-function AddUserModal({ open, onClose, onCreated }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [dept, setDept] = useState(DEPARTMENTS[0]);
-  const [role, setRole] = useState("Employee");
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  if (!open) return null;
-
-  async function handleCreate() {
-    setError("");
-    if (!name.trim() || !email.trim() || password.length < 6) {
-      setError("Name, email and a password of at least 6 characters are required.");
-      return;
-    }
-    setSaving(true);
-    try {
-      const created = await api.createUser({ name, email, password, dept, role });
-      onCreated(created);
-      setName(""); setEmail(""); setPassword(""); setDept(DEPARTMENTS[0]); setRole("Employee");
-      onClose();
-    } catch (err) {
-      setError(err.message || "Could not create user");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0" style={{ background: "#0B122066" }} onClick={onClose} />
-      <div className="nx-fade relative bg-white rounded-lg p-6 w-full max-w-sm" style={{ border: `1px solid ${C.border}` }}>
-        <div className="nx-serif text-[19px] mb-4">Add user</div>
-        <div className="space-y-3">
-          <div>
-            <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Full name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md text-[13px]" style={{ border: `1px solid ${C.border}` }} />
-          </div>
-          <div>
-            <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Email</label>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md text-[13px]" style={{ border: `1px solid ${C.border}` }} />
-          </div>
-          <div>
-            <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Initial password</label>
-            <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="w-full mt-1 px-3 py-2 rounded-md text-[13px]" style={{ border: `1px solid ${C.border}` }} />
-          </div>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Department</label>
-              <select value={dept} onChange={(e) => setDept(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md text-[13px]" style={{ border: `1px solid ${C.border}` }}>
-                {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Role</label>
-              <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md text-[13px]" style={{ border: `1px solid ${C.border}` }}>
-                <option>Admin</option><option>Manager</option><option>Employee</option>
-              </select>
-            </div>
-          </div>
-          {error && <div className="text-[12.5px]" style={{ color: C.redMuted }}>{error}</div>}
-        </div>
-        <div className="flex gap-2 mt-5">
-          <Button variant="outline" onClick={onClose} className="flex-1 justify-center">Cancel</Button>
-          <Button variant="gold" onClick={handleCreate} disabled={saving} className="flex-1 justify-center">{saving ? "Adding…" : "Add user"}</Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function AdminUsers() {
-  const [deptFilter, setDeptFilter] = useState("All");
-  const [roleFilter, setRoleFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [openMenu, setOpenMenu] = useState(null); // 'dept' | 'role' | 'status' | null
-  const [modalOpen, setModalOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [allPeople, setAllPeople] = useState([]);
-
-  const deptOptions = ["All", ...DEPARTMENTS];
-  const roleOptions = ["All", "Admin", "Manager", "Employee"];
-  const statusOptions = ["All", "Active", "Away", "Offline"];
-
-  function FilterDropdown({ id, label, value, options, onChange }) {
-    return (
-      <div className="relative">
-        <Button variant="outline" icon={Filter} onClick={() => setOpenMenu(openMenu === id ? null : id)}>
-          {label}{value !== "All" ? `: ${value}` : ""}
-        </Button>
-        {openMenu === id && (
-          <div className="absolute left-0 top-full mt-1 z-20 bg-white rounded-md shadow-lg py-1 min-w-[160px]" style={{ border: `1px solid ${C.border}` }}>
-            {options.map((o) => (
-              <button key={o} onClick={() => { onChange(o); setOpenMenu(null); }} className="w-full text-left px-3 py-1.5 text-[13px] hover:bg-gray-50" style={{ color: o === value ? C.gold : C.textDark, fontWeight: o === value ? 600 : 400 }}>{o}</button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function handleExport() {
-    const rows = allPeople.filter((p) => {
-      if (deptFilter !== "All" && p.dept !== deptFilter) return false;
-      if (roleFilter !== "All" && p.role !== roleFilter) return false;
-      if (statusFilter !== "All" && p.status !== statusFilter) return false;
-      return true;
-    });
-    const header = "Name,Department,Role,Status,AI Usage %,Last Active";
-    const csv = [header, ...rows.map((p) => `${p.name},${p.dept},${p.role},${p.status},${p.usage},${p.last}`)].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "nexora-users.csv"; a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
-    <div className="nx-fade" onClick={() => openMenu && setOpenMenu(null)}>
-      <SectionHeading eyebrow="Administration" title="People & Access" subtitle="Manage roles, permissions and enterprise-wide access." right={<Button variant="gold" icon={Plus} onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}>Add user</Button>} />
-      <div className="flex flex-wrap gap-2 mb-4" onClick={(e) => e.stopPropagation()}>
-        <FilterDropdown id="dept" label="Department" value={deptFilter} options={deptOptions} onChange={setDeptFilter} />
-        <FilterDropdown id="role" label="Role" value={roleFilter} options={roleOptions} onChange={setRoleFilter} />
-        <FilterDropdown id="status" label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+    <div className="nx-fade">
+      <SectionHeading eyebrow="Administration" title="People & Access" subtitle="Manage roles, permissions and enterprise-wide access." right={<Button variant="gold" icon={Plus}>Add user</Button>} />
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button variant="outline" icon={Filter}>Department</Button>
+        <Button variant="outline" icon={Filter}>Role</Button>
+        <Button variant="outline" icon={Filter}>Status</Button>
         <span className="flex-1" />
-        <Button variant="outline" icon={Download} onClick={handleExport}>Export</Button>
+        <Button variant="outline" icon={Download}>Export</Button>
       </div>
-      <PeopleTable editable filters={{ dept: deptFilter, role: roleFilter, status: statusFilter }} refreshKey={refreshKey} onDataLoaded={setAllPeople} />
-      <AddUserModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={() => setRefreshKey((k) => k + 1)} />
+      <PeopleTable editable />
     </div>
   );
 }
 
 function AdminAudit() {
-  const [events, setEvents] = useState([]);
-
-  useEffect(() => {
-    api.getAuditLog(50).then(setEvents).catch(console.error);
-  }, []);
-
   return (
     <div className="nx-fade">
       <SectionHeading eyebrow="Administration" title="Audit Log" subtitle="Every action taken across the intelligence environment." />
       <Card className="divide-y" style={{ borderColor: C.border }}>
-        {events.map((e) => (
+        {AUDIT_EVENTS.map((e) => (
           <div key={e.id} className="px-5 py-4 flex items-center gap-4 flex-wrap" style={{ borderTop: `1px solid ${C.border}` }}>
-            <Avatar name={e.user_name} size={30} />
+            <Avatar name={e.user} size={30} />
             <div className="min-w-[140px]">
-              <div className="text-[13px] font-medium">{e.user_name}</div>
+              <div className="text-[13px] font-medium">{e.user}</div>
               <div className="text-[11.5px]" style={{ color: C.textMuted }}>{e.resource}</div>
             </div>
             <div className="flex-1 text-[13px]" style={{ color: C.textMuted }}>{e.action}</div>
             <span className="text-[11px] px-2 py-0.5 rounded" style={{ background: e.result === "Success" ? `${C.green}18` : `${C.gold}22`, color: e.result === "Success" ? C.green : C.gold }}>{e.result}</span>
-            <span className="text-[12px] w-16 text-right" style={{ color: C.textMuted }}>{new Date(e.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            <span className="text-[12px] w-16 text-right" style={{ color: C.textMuted }}>{e.time}</span>
           </div>
         ))}
       </Card>
@@ -755,35 +611,19 @@ function AdminAudit() {
 }
 
 function AdminAIConfig() {
-  const [assistants, setAssistants] = useState([]);
-
-  useEffect(() => {
-    api.getAssistants().then(setAssistants).catch(console.error);
-  }, []);
-
-  async function toggle(a) {
-    try {
-      const updated = await api.updateAssistant(a.id, { available: !a.available });
-      setAssistants((prev) => prev.map((x) => (x.id === a.id ? updated : x)));
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
   return (
     <div className="nx-fade">
       <SectionHeading eyebrow="Administration" title="AI Control Room" subtitle="Configure which assistants are available across the enterprise." />
       <Card className="divide-y" style={{ borderColor: C.border }}>
-        {assistants.map((a) => (
+        {ASSISTANTS.map((a) => (
           <div key={a.id} className="px-5 py-4 flex items-center gap-4 flex-wrap" style={{ borderTop: `1px solid ${C.border}` }}>
             <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: C.cream }}><Sparkles size={16} style={{ color: C.gold }} /></div>
             <div className="min-w-[180px] flex-1">
               <div className="text-[13.5px] font-medium">{a.name}</div>
-              <div className="text-[12px]" style={{ color: C.textMuted }}>{a.description}</div>
+              <div className="text-[12px]" style={{ color: C.textMuted }}>{a.desc}</div>
             </div>
-            <div className="text-[12.5px] w-16" style={{ color: C.textMuted }}>{a.usage_percent}%</div>
+            <div className="text-[12.5px] w-16" style={{ color: C.textMuted }}>{a.usage}</div>
             <button
-              onClick={() => toggle(a)}
               className="w-10 h-5.5 rounded-full relative transition-colors"
               style={{ background: a.available ? C.gold : C.border, height: 22, width: 40 }}
             >
@@ -799,27 +639,13 @@ function AdminAIConfig() {
 
 /* ============================== MANAGER DASHBOARD ============================== */
 function ManagerDashboard({ setView }) {
-  const [data, setData] = useState(null);
-  const [approvals, setApprovals] = useState([]);
-  const [team, setTeam] = useState([]);
-
-  useEffect(() => {
-    api.getDashboard("manager").then(setData).catch(console.error);
-    api.getApprovals("Pending")
-      .then((rows) => setApprovals(rows.map((a) => ({ id: a.id, name: a.requester_name, dept: a.dept, request: a.request, when: new Date(a.created_at).toLocaleString() }))))
-      .catch(console.error);
-    api.getUsers().then(setTeam).catch(console.error);
-  }, []);
-
-  if (!data) return <div className="nx-fade text-[13px]" style={{ color: C.textMuted }}>Loading dashboard…</div>;
-
   return (
     <div className="nx-fade">
       <SectionHeading eyebrow="Team Intelligence" title="Team Intelligence" subtitle="Understand how your team works with AI." />
       <div className="flex flex-wrap gap-4 mb-4">
-        <MetricHero label="Team size" value={data.team_size} />
-        <MetricHero label="AI adoption" value={`${data.team_ai_usage_avg}%`} delta="+6.2%" />
-        <MetricHero label="Pending approvals" value={data.pending_approvals} />
+        <MetricHero label="Team size" value="18" />
+        <MetricHero label="AI adoption" value="83%" delta="+6.2%" />
+        <MetricHero label="Pending approvals" value="3" />
         <MetricHero label="Weekly activity" value="214" delta="+9.1%" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -828,12 +654,12 @@ function ManagerDashboard({ setView }) {
             <div className="text-[13px] font-semibold">Needs your attention</div>
             <button onClick={() => setView("manager-approvals")} className="text-[12px] font-medium" style={{ color: C.gold }}>View all</button>
           </div>
-          {approvals.slice(0, 2).map((a) => <ApprovalCard key={a.id} a={a} compact />)}
+          {APPROVALS.slice(0, 2).map((a) => <ApprovalCard key={a.id} a={a} compact />)}
         </Card>
         <Card className="p-6">
           <div className="text-[13px] font-semibold mb-4">Team, at a glance</div>
           <div className="flex -space-x-2 mb-4">
-            {team.slice(0, 6).map((p) => <div key={p.id} style={{ border: `2px solid #fff`, borderRadius: 999 }}><Avatar name={p.name} size={32} /></div>)}
+            {PEOPLE.slice(0, 6).map((p) => <div key={p.id} style={{ border: `2px solid #fff`, borderRadius: 999 }}><Avatar name={p.name} size={32} /></div>)}
           </div>
           <MiniBars data={ACTIVITY_30D.slice(0, 14)} />
         </Card>
@@ -842,23 +668,8 @@ function ManagerDashboard({ setView }) {
   );
 }
 
-function ApprovalCard({ a, compact, onResolved }) {
+function ApprovalCard({ a, compact }) {
   const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  async function resolve(action) {
-    setLoading(true);
-    try {
-      const updated = action === "approve" ? await api.approveRequest(a.id) : await api.rejectRequest(a.id);
-      setStatus(updated.status);
-      onResolved?.(a.id, updated.status);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <Card className={`p-4 flex items-center gap-4 flex-wrap ${compact ? "mb-2" : "mb-3"}`}>
       <Avatar name={a.name} size={36} />
@@ -871,8 +682,8 @@ function ApprovalCard({ a, compact, onResolved }) {
         <span className="text-[12px] font-medium px-2.5 py-1 rounded" style={{ background: status === "Approved" ? `${C.green}18` : `${C.redMuted}18`, color: status === "Approved" ? C.green : C.redMuted }}>{status}</span>
       ) : (
         <div className="flex gap-2">
-          <Button variant="gold" disabled={loading} onClick={() => resolve("approve")}>Approve</Button>
-          <Button variant="outline" disabled={loading} onClick={() => resolve("reject")}>Reject</Button>
+          <Button variant="gold" onClick={() => setStatus("Approved")}>Approve</Button>
+          <Button variant="outline" onClick={() => setStatus("Rejected")}>Reject</Button>
           {!compact && <Button variant="ghost">View details</Button>}
         </div>
       )}
@@ -881,23 +692,10 @@ function ApprovalCard({ a, compact, onResolved }) {
 }
 
 function ManagerApprovals() {
-  const [approvals, setApprovals] = useState([]);
-
-  useEffect(() => {
-    api.getApprovals("Pending")
-      .then((rows) => setApprovals(rows.map((a) => ({ id: a.id, name: a.requester_name, dept: a.dept, request: a.request, when: new Date(a.created_at).toLocaleString() }))))
-      .catch(console.error);
-  }, []);
-
-  function handleResolved(id) {
-    setApprovals((prev) => prev.filter((a) => a.id !== id));
-  }
-
   return (
     <div className="nx-fade">
       <SectionHeading eyebrow="Workflow" title="Approval Center" subtitle="Requests from your team that need a decision." />
-      {approvals.length === 0 && <div className="text-[13px]" style={{ color: C.textMuted }}>No pending requests.</div>}
-      {approvals.map((a) => <ApprovalCard key={a.id} a={a} onResolved={handleResolved} />)}
+      {APPROVALS.map((a) => <ApprovalCard key={a.id} a={a} />)}
     </div>
   );
 }
@@ -913,12 +711,6 @@ function ManagerTeam() {
 
 function ManagerAnalytics() {
   const [range, setRange] = useState("30D");
-  const [assistants, setAssistants] = useState([]);
-
-  useEffect(() => {
-    api.getAssistants().then(setAssistants).catch(console.error);
-  }, []);
-
   return (
     <div className="nx-fade">
       <SectionHeading eyebrow="Insights" title="Team Analytics" subtitle="How your team is using enterprise intelligence." right={
@@ -934,10 +726,10 @@ function ManagerAnalytics() {
       </Card>
       <Card className="p-6">
         <div className="text-[13px] font-semibold mb-4">Assistant adoption</div>
-        {assistants.slice(0, 4).map((a) => (
+        {ASSISTANTS.slice(0, 4).map((a) => (
           <div key={a.id} className="mb-3">
-            <div className="flex justify-between text-[12.5px] mb-1"><span>{a.name}</span><span style={{ color: C.textMuted }}>{a.usage_percent}%</span></div>
-            <div className="h-1 rounded-full" style={{ background: C.cream }}><div className="h-1 rounded-full" style={{ width: `${a.usage_percent}%`, background: C.burgundy }} /></div>
+            <div className="flex justify-between text-[12.5px] mb-1"><span>{a.name}</span><span style={{ color: C.textMuted }}>{a.usage}</span></div>
+            <div className="h-1 rounded-full" style={{ background: C.cream }}><div className="h-1 rounded-full" style={{ width: a.usage, background: C.burgundy }} /></div>
           </div>
         ))}
       </Card>
@@ -948,18 +740,12 @@ function ManagerAnalytics() {
 /* ============================== EMPLOYEE DASHBOARD ============================== */
 function EmployeeDashboard({ setView, user }) {
   const first = user.name.split(" ")[0];
-  const [stats, setStats] = useState(null);
   const tiles = [
     { title: "Ask your documents", desc: "Find answers across company knowledge.", icon: FileText },
     { title: "Submit a request", desc: "Request access, approval or support.", icon: CheckSquare },
     { title: "Analyze data", desc: "Turn your data into insights.", icon: BarChart3 },
     { title: "My activity", desc: "Review your personal AI usage.", icon: ListChecks },
   ];
-
-  useEffect(() => {
-    api.getDashboard("employee").then(setStats).catch(console.error);
-  }, []);
-
   return (
     <div className="nx-fade">
       <div className="mb-8">
@@ -982,9 +768,9 @@ function EmployeeDashboard({ setView, user }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricHero label="AI sessions" value={stats ? stats.ai_sessions : "—"} />
-        <MetricHero label="Documents analyzed" value={stats ? stats.documents_analyzed : "—"} />
-        <MetricHero label="Requests submitted" value={stats ? stats.requests_submitted : "—"} />
+        <MetricHero label="AI sessions" value="42" />
+        <MetricHero label="Documents analyzed" value="17" />
+        <MetricHero label="Requests submitted" value="3" />
       </div>
     </div>
   );
@@ -992,73 +778,34 @@ function EmployeeDashboard({ setView, user }) {
 
 /* ============================== AI ASSISTANT HUB ============================== */
 function AIHub({ role }) {
-  const allowedByRole = { Admin: ["general", "docs", "code"], Manager: ["general", "docs"], Employee: ["general", "docs"] };
-  const allowed = allowedByRole[role] || ["general"];
-
-  const [assistants, setAssistants] = useState([]);
+  const allowed = role === "Admin" ? ["general", "docs", "code"] : role === "Manager" ? ["general", "docs"] : ["general", "docs"];
   const [assistant, setAssistant] = useState("general");
   const [showSources, setShowSources] = useState(true);
-  const [conversations, setConversations] = useState([]);
-  const [conversationId, setConversationId] = useState(null);
-  const [msgs, setMsgs] = useState([]);
-  const [sources, setSources] = useState([]);
+  const [msgs, setMsgs] = useState([
+    { role: "user", text: "Summarize the key points of the employee handbook regarding remote work." },
+    { role: "ai", text: "Employees may work remotely up to 3 days per week, subject to manager approval. Core collaboration hours are 10:00–16:00 IST. Equipment stipends are available annually, and all remote setups must meet the company's data-security checklist." },
+  ]);
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    api.getAssistants().then(setAssistants).catch(console.error);
-    api.getConversations().then(setConversations).catch(console.error);
-  }, []);
-
-  async function openConversation(id) {
-    setConversationId(id);
-    try {
-      const rows = await api.getMessages(id);
-      setMsgs(rows.map((m) => ({ role: m.role, text: m.text })));
-      const lastSources = rows.filter((m) => m.sources?.length).slice(-1)[0]?.sources || [];
-      setSources(lastSources);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function newConversation() {
-    setConversationId(null);
-    setMsgs([]);
-    setSources([]);
-  }
-
-  async function send() {
-    if (!input.trim() || sending) return;
-    const text = input;
+  const send = () => {
+    if (!input.trim()) return;
+    setMsgs((m) => [...m, { role: "user", text: input }, { role: "ai", text: "Based on the referenced sources, here is a synthesized answer to your question — refined for clarity and grounded in company documentation." }]);
     setInput("");
-    setMsgs((m) => [...m, { role: "user", text }]);
-    setSending(true);
-    try {
-      const res = await api.sendMessage({ conversation_id: conversationId, assistant_id: assistant, message: text });
-      setConversationId(res.conversation_id);
-      setMsgs((m) => [...m, { role: "ai", text: res.reply }]);
-      setSources(res.sources || []);
-      // Refresh sidebar so a brand-new conversation shows up.
-      api.getConversations().then(setConversations).catch(console.error);
-    } catch (err) {
-      setMsgs((m) => [...m, { role: "ai", text: `Error: ${err.message}` }]);
-    } finally {
-      setSending(false);
-    }
-  }
+  };
 
   return (
     <div className="nx-fade flex flex-col lg:flex-row gap-4" style={{ height: "calc(100vh - 120px)" }}>
       {/* Conversations */}
       <div className="lg:w-64 shrink-0 flex flex-col">
-        <Button variant="outline" icon={Plus} onClick={newConversation} className="mb-3 w-full justify-center">New conversation</Button>
+        <Button variant="outline" icon={Plus} className="mb-3 w-full justify-center">New conversation</Button>
         <div className="overflow-y-auto nx-scroll flex-1">
-          {conversations.length === 0 && (
-            <div className="text-[12.5px] px-1" style={{ color: C.textMuted }}>No conversations yet.</div>
-          )}
-          {conversations.map((c) => (
-            <button key={c.id} onClick={() => openConversation(c.id)} className="w-full text-left px-2.5 py-2 rounded-md text-[13px] mb-0.5 hover:bg-white" style={{ color: C.textDark, background: conversationId === c.id ? "#fff" : "transparent" }}>{c.title}</button>
+          {Object.entries(CONVERSATIONS).map(([group, items]) => (
+            <div key={group} className="mb-4">
+              <div className="text-[10px] font-semibold tracking-[0.1em] uppercase mb-1.5 px-1" style={{ color: C.textMuted }}>{group}</div>
+              {items.map((c) => (
+                <button key={c} className="w-full text-left px-2.5 py-2 rounded-md text-[13px] mb-0.5 hover:bg-white" style={{ color: C.textDark }}>{c}</button>
+              ))}
+            </div>
           ))}
         </div>
       </div>
@@ -1067,8 +814,7 @@ function AIHub({ role }) {
       <Card className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center gap-2 px-5 py-3 flex-wrap" style={{ borderBottom: `1px solid ${C.border}` }}>
           {allowed.map((id) => {
-            const a = assistants.find((x) => x.id === id);
-            if (!a) return null;
+            const a = ASSISTANTS.find((x) => x.id === id);
             return (
               <button key={id} onClick={() => setAssistant(id)} className="px-3 py-1.5 rounded-md text-[12.5px] font-medium" style={{ background: assistant === id ? C.navy : "transparent", color: assistant === id ? C.ivory : C.textMuted, border: `1px solid ${assistant === id ? C.navy : C.border}` }}>{a.name}</button>
             );
@@ -1078,9 +824,6 @@ function AIHub({ role }) {
         </div>
 
         <div className="flex-1 overflow-y-auto nx-scroll px-6 py-6">
-          {msgs.length === 0 && (
-            <div className="text-[13px]" style={{ color: C.textMuted }}>Ask anything to start a new conversation.</div>
-          )}
           {msgs.map((m, i) => (
             <div key={i} className="mb-6 max-w-2xl" style={{ marginLeft: m.role === "user" ? "auto" : 0 }}>
               <div className="text-[10.5px] font-semibold tracking-wide uppercase mb-1.5" style={{ color: m.role === "user" ? C.textMuted : C.gold, textAlign: m.role === "user" ? "right" : "left" }}>{m.role === "user" ? "You" : "NEXORA"}</div>
@@ -1092,15 +835,14 @@ function AIHub({ role }) {
               )}
             </div>
           ))}
-          {sending && <div className="text-[13px]" style={{ color: C.textMuted }}>NEXORA is thinking…</div>}
         </div>
 
         <div className="px-5 py-4" style={{ borderTop: `1px solid ${C.border}` }}>
           <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-md" style={{ border: `1px solid ${C.border}` }}>
             <Paperclip size={15} style={{ color: C.textMuted }} />
             <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Ask anything about your enterprise workspace..." className="flex-1 text-[13.5px] outline-none" />
-            <span className="text-[10.5px] px-1.5 py-0.5 rounded" style={{ background: C.cream, color: C.textMuted }}>{assistants.find((a) => a.id === assistant)?.name}</span>
-            <button onClick={send} disabled={sending} className="p-1.5 rounded-md" style={{ background: C.navy, color: C.ivory }}><Send size={13.5} /></button>
+            <span className="text-[10.5px] px-1.5 py-0.5 rounded" style={{ background: C.cream, color: C.textMuted }}>{ASSISTANTS.find((a) => a.id === assistant)?.name}</span>
+            <button onClick={send} className="p-1.5 rounded-md" style={{ background: C.navy, color: C.ivory }}><Send size={13.5} /></button>
           </div>
         </div>
       </Card>
@@ -1109,8 +851,7 @@ function AIHub({ role }) {
       {showSources && (
         <div className="lg:w-72 shrink-0">
           <div className="text-[11px] font-semibold tracking-[0.1em] uppercase mb-3 px-1" style={{ color: C.textMuted }}>Referenced sources</div>
-          {sources.length === 0 && <div className="text-[12.5px] px-1" style={{ color: C.textMuted }}>No sources for this message.</div>}
-          {sources.map((s) => (
+          {SOURCES.map((s) => (
             <Card key={s.title} className="p-4 mb-3 cursor-pointer hover:-translate-y-0.5 transition-transform">
               <div className="flex items-center gap-2 mb-1.5"><FileText size={14} style={{ color: C.gold }} /><span className="text-[13px] font-medium truncate">{s.title}</span></div>
               <div className="text-[11.5px]" style={{ color: C.textMuted }}>Page {s.page} · {s.relevance}% relevance</div>
@@ -1146,70 +887,7 @@ function AccessRestricted({ setView, role }) {
 
 /* ============================== LOGIN ============================== */
 function Login({ onLogin }) {
-  const [mode, setMode] = useState("signin"); // 'signin' | 'signup'
   const [role, setRole] = useState("Employee");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  // Signup-only fields
-  const [name, setName] = useState("");
-  const [dept, setDept] = useState(DEPARTMENTS[0]);
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const passwordStrongEnough = password.length >= 6 && /[^A-Za-z0-9]/.test(password);
-
-  function switchMode(next) {
-    setMode(next);
-    setError("");
-    setPassword("");
-    setConfirmPassword("");
-  }
-
-  async function handleSignIn() {
-    setError("");
-    setLoading(true);
-    try {
-      // Calls POST /api/auth/login on the Express backend.
-      const data = await api.login(email, password);
-      setToken(data.access_token); // stored in localStorage, sent as Bearer token on every future request
-      onLogin({ role: data.role, name: data.name, dept: data.dept });
-    } catch (err) {
-      setError(err.message || "Sign in failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSignUp() {
-    setError("");
-    if (!name.trim() || !email.trim()) {
-      setError("Name and email are required");
-      return;
-    }
-    if (!passwordStrongEnough) {
-      setError("Password must be at least 6 characters and include a special character");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords don't match");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Calls POST /api/auth/register — creates the account and logs you straight in.
-      const data = await api.register({ name, email, password, dept });
-      setToken(data.access_token);
-      onLogin({ role: data.role, name: data.name, dept: data.dept });
-    } catch (err) {
-      setError(err.message || "Could not create account");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <div className="nx grid grid-cols-1 lg:grid-cols-2 min-h-screen">
       <style>{FONTS}</style>
@@ -1226,96 +904,36 @@ function Login({ onLogin }) {
       <div className="flex items-center justify-center p-8" style={{ background: C.ivory }}>
         <div className="w-full max-w-sm">
           <Logo />
-          {mode === "signin" ? (
-            <>
-              <div className="nx-serif mt-8" style={{ fontSize: 24 }}>Welcome back</div>
-              <p className="text-[13.5px] mt-1" style={{ color: C.textMuted }}>Sign in to your enterprise workspace.</p>
-            </>
-          ) : (
-            <>
-              <div className="nx-serif mt-8" style={{ fontSize: 24 }}>Create your account</div>
-              <p className="text-[13.5px] mt-1" style={{ color: C.textMuted }}>Set up access to your enterprise workspace.</p>
-            </>
-          )}
+          <div className="nx-serif mt-8" style={{ fontSize: 24 }}>Welcome back</div>
+          <p className="text-[13.5px] mt-1" style={{ color: C.textMuted }}>Sign in to your enterprise workspace.</p>
 
           <div className="mt-7 space-y-4">
-            {mode === "signup" && (
-              <div>
-                <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Full name</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="w-full mt-1.5 px-3.5 py-2.5 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }} />
-              </div>
-            )}
-
             <div>
               <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Work email</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" className="w-full mt-1.5 px-3.5 py-2.5 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }} />
+              <input defaultValue="meera.krishnan@nexora.ai" className="w-full mt-1.5 px-3.5 py-2.5 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }} />
             </div>
-
-            {mode === "signup" && (
-              <div>
-                <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Department</label>
-                <select value={dept} onChange={(e) => setDept(e.target.value)} className="w-full mt-1.5 px-3.5 py-2.5 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }}>
-                  {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
-                </select>
-              </div>
-            )}
-
             <div>
               <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Password</label>
-              <div className="relative mt-1.5">
-                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className="w-full px-3.5 py-2.5 pr-10 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }} />
-                <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: C.textMuted }}>
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {mode === "signup" && (
-                <div className="text-[11px] mt-1" style={{ color: passwordStrongEnough ? C.green : C.textMuted }}>At least 6 characters, including one special character (e.g. ! @ # $).</div>
-              )}
+              <input type="password" defaultValue="••••••••••" className="w-full mt-1.5 px-3.5 py-2.5 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }} />
+            </div>
+            <div className="flex items-center justify-between text-[12.5px]">
+              <label className="flex items-center gap-1.5" style={{ color: C.textMuted }}><input type="checkbox" defaultChecked />Remember me</label>
+              <span style={{ color: C.gold }} className="cursor-pointer">Forgot password?</span>
             </div>
 
-            {mode === "signup" && (
-              <div>
-                <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Confirm password</label>
-                <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" className="w-full mt-1.5 px-3.5 py-2.5 rounded-md text-[13.5px]" style={{ border: `1px solid ${C.border}`, background: "#fff" }} />
+            <div>
+              <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Demo role (for preview only)</label>
+              <div className="flex gap-2 mt-1.5">
+                {["Admin", "Manager", "Employee"].map((r) => (
+                  <button key={r} onClick={() => setRole(r)} className="flex-1 py-2 rounded-md text-[12.5px] font-medium" style={{ background: role === r ? C.navy : "#fff", color: role === r ? C.ivory : C.textMuted, border: `1px solid ${role === r ? C.navy : C.border}` }}>{r}</button>
+                ))}
               </div>
-            )}
+            </div>
 
-            {error && <div className="text-[12.5px]" style={{ color: C.redMuted }}>{error}</div>}
-
-            {mode === "signin" && (
-              <div className="flex items-center justify-between text-[12.5px]">
-                <label className="flex items-center gap-1.5" style={{ color: C.textMuted }}><input type="checkbox" defaultChecked />Remember me</label>
-                <span style={{ color: C.gold }} className="cursor-pointer">Forgot password?</span>
-              </div>
-            )}
-
-            {mode === "signin" && (
-              <div>
-                <label className="text-[11.5px] font-medium" style={{ color: C.textMuted }}>Demo role (for preview only)</label>
-                <div className="flex gap-2 mt-1.5">
-                  {["Admin", "Manager", "Employee"].map((r) => (
-                    <button key={r} onClick={() => setRole(r)} className="flex-1 py-2 rounded-md text-[12.5px] font-medium" style={{ background: role === r ? C.navy : "#fff", color: role === r ? C.ivory : C.textMuted, border: `1px solid ${role === r ? C.navy : C.border}` }}>{r}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {mode === "signin" ? (
-              <button onClick={handleSignIn} disabled={loading} className="w-full py-2.5 rounded-md text-[13.5px] font-medium mt-2 transition-opacity hover:opacity-90 disabled:opacity-60" style={{ background: C.gold, color: C.navy }}>{loading ? "SIGNING IN…" : "SIGN IN"}</button>
-            ) : (
-              <button onClick={handleSignUp} disabled={loading} className="w-full py-2.5 rounded-md text-[13.5px] font-medium mt-2 transition-opacity hover:opacity-90 disabled:opacity-60" style={{ background: C.gold, color: C.navy }}>{loading ? "CREATING ACCOUNT…" : "CREATE ACCOUNT"}</button>
-            )}
+            <button onClick={() => onLogin(role)} className="w-full py-2.5 rounded-md text-[13.5px] font-medium mt-2 transition-opacity hover:opacity-90" style={{ background: C.gold, color: C.navy }}>SIGN IN</button>
           </div>
 
-          <div className="mt-6 text-center text-[13px]" style={{ color: C.textMuted }}>
-            {mode === "signin" ? (
-              <>Don't have an account? <span onClick={() => switchMode("signup")} className="cursor-pointer font-medium" style={{ color: C.gold }}>Create one</span></>
-            ) : (
-              <>Already have an account? <span onClick={() => switchMode("signin")} className="cursor-pointer font-medium" style={{ color: C.gold }}>Sign in</span></>
-            )}
-          </div>
-
-          <div className="mt-6 text-center text-[11.5px]" style={{ color: C.slateLight }}>Secure enterprise environment</div>
+          <div className="mt-8 text-center text-[11.5px]" style={{ color: C.slateLight }}>Secure enterprise environment</div>
         </div>
       </div>
     </div>
@@ -1326,7 +944,6 @@ function Login({ onLogin }) {
 export default function NexoraApp() {
   const [authed, setAuthed] = useState(false);
   const [role, setRole] = useState("Employee");
-  const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState("employee");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -1342,7 +959,7 @@ export default function NexoraApp() {
   const allowedViews = useMemo(() => new Set(NAV[role].flatMap((g) => g.items.map((i) => i.id)).concat(["ai"])), [role]);
 
   if (!authed) {
-    return <Login onLogin={(user) => { setRole(user.role); setCurrentUser(user); setView(user.role.toLowerCase()); setAuthed(true); }} />;
+    return <Login onLogin={(r) => { setRole(r); setView(r.toLowerCase()); setAuthed(true); }} />;
   }
 
   const restricted = !allowedViews.has(view);
@@ -1358,7 +975,7 @@ export default function NexoraApp() {
       case "manager-approvals": return <ManagerApprovals />;
       case "manager-team": return <ManagerTeam />;
       case "manager-analytics": return <ManagerAnalytics />;
-      case "employee": return <EmployeeDashboard setView={setView} user={currentUser} />;
+      case "employee": return <EmployeeDashboard setView={setView} user={USERS_BY_ROLE[role]} />;
       case "ai": return <AIHub role={role} />;
       case "kb": return <SimplePage title="Knowledge Base" subtitle="Company-wide documents and reference material." />;
       case "docs": return <SimplePage title="Documents" subtitle="Everything shared with you, organized." />;
@@ -1373,7 +990,7 @@ export default function NexoraApp() {
       <style>{FONTS}</style>
       <Sidebar role={role} view={view} setView={setView} collapsed={collapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <div className="flex-1 min-w-0 flex flex-col">
-        <TopBar role={role} user={currentUser} onMenu={() => setMobileOpen(true)} onPalette={() => setPaletteOpen(true)} onNotify={() => setNotifOpen(true)} view={view} onSignOut={() => { setToken(null); setAuthed(false); }} />
+        <TopBar role={role} user={USERS_BY_ROLE[role]} onMenu={() => setMobileOpen(true)} onPalette={() => setPaletteOpen(true)} onNotify={() => setNotifOpen(true)} view={view} onSignOut={() => setAuthed(false)} />
         <main className="flex-1 px-5 py-6 sm:px-8 sm:py-8 max-w-[1400px] w-full mx-auto">
           {renderView()}
         </main>
