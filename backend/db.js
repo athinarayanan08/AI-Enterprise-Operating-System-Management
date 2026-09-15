@@ -79,6 +79,22 @@ function initSchema() {
       unread INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      type TEXT DEFAULT 'Project Work',
+      description TEXT DEFAULT '',
+      assigned_to_id INTEGER,
+      assigned_to_name TEXT NOT NULL,
+      assigned_by_id INTEGER NOT NULL,
+      assigned_by_name TEXT NOT NULL,
+      dept TEXT DEFAULT '',
+      priority TEXT DEFAULT 'Medium',
+      status TEXT DEFAULT 'Pending',
+      due_date TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 }
 

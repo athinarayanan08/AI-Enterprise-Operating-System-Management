@@ -20,6 +20,7 @@ const approvalsRoutes = require("./routes/approvals");
 const chatRoutes = require("./routes/chat");
 const notificationsRoutes = require("./routes/notifications");
 const dashboardRoutes = require("./routes/dashboard");
+const tasksRoutes = require("./routes/tasks");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -41,6 +42,7 @@ app.use("/api/users", usersRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/assistants", assistantsRoutes);
 app.use("/api/approvals", approvalsRoutes);
+app.use("/api/tasks", tasksRoutes);
 app.use("/api", chatRoutes); // exposes /api/conversations and /api/chat
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
