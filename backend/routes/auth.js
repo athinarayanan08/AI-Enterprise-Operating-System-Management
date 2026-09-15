@@ -36,4 +36,40 @@ router.post("/login", (req, res) => {
   });
 });
 
+router.post("/register", (req, res) => {
+  const { name, email, password, dept } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ detail: "Name, email, and password are required" });
+  }
+
+  const existingUser = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+  if (existingUser) {
+    return res.status(400).json({ detail: "An account with this email already exists" });
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 10);
+  const userDept = dept || "Engineering";
+  const role = "Employee";
+  const status = "Active";
+
+  const result = db.prepare(
+    "INSERT INTO users (name, email, password_hash, dept, role, status) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(name, email, passwordHash, userDept, role, status);
+
+  const userId = result.lastInsertRowid;
+  const token = jwt.sign({ sub: userId }, SECRET_KEY, { expiresIn: "8h" });
+
+  db.prepare(
+    "INSERT INTO audit_events (user_name, action, resource, result) VALUES (?, ?, ?, ?)"
+  ).run(name, "User registered account", "—", "Success");
+
+  res.json({
+    access_token: token,
+    token_type: "bearer",
+    role,
+    name,
+    dept: userDept,
+  });
+});
+
 module.exports = router;
