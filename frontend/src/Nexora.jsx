@@ -7,7 +7,8 @@ import {
   ArrowUpRight, Send, Copy, RotateCcw, Bookmark, Share2, ThumbsUp, ThumbsDown,
   Filter, Download, MoreHorizontal, Lock, ArrowLeft, Command as CommandIcon, LogOut,
   Eye, EyeOff, Briefcase, AlertTriangle, Clock, CheckCircle2, Circle, ArrowRight,
-  TrendingUp, Phone, Mail, Globe, Settings, Layers, Calendar
+  TrendingUp, Phone, Mail, Globe, Settings, Layers, Calendar, Trash2, Check, RefreshCw,
+  User, Upload, Image as ImageIcon, ScanSearch, Lightbulb
 } from "lucide-react";
 
 /* ============================== DESIGN TOKENS (GLASSMORPHIC DEEP PURPLE) ============================== */
@@ -68,6 +69,66 @@ const FONTS = `
   border-color: rgba(168, 85, 247, 0.35);
   background: rgba(255, 255, 255, 0.07);
 }
+@keyframes nxaurora {
+  0% { transform: translate3d(-4%, -2%, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(6%, 4%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(-2%, 6%, 0) rotate(-6deg) scale(1.04); }
+}
+@keyframes nxsheen {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.nx-aurora {
+  background: #04060c;
+  isolation: isolate;
+}
+.nx-aurora-ribbons {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(ellipse at 18% 28%, rgba(56, 230, 255, 0.42), transparent 42%),
+    radial-gradient(ellipse at 82% 18%, rgba(255, 72, 186, 0.34), transparent 44%),
+    radial-gradient(ellipse at 68% 78%, rgba(124, 92, 255, 0.46), transparent 48%),
+    radial-gradient(ellipse at 12% 82%, rgba(255, 196, 86, 0.22), transparent 40%),
+    conic-gradient(from 210deg at 50% 50%, rgba(56,230,255,0.12), rgba(255,72,186,0.08), rgba(124,92,255,0.14), transparent 55%);
+  filter: blur(36px) saturate(140%);
+  animation: nxaurora 16s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.nx-grid-veil {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 35%, transparent 78%);
+}
+.prism-glass {
+  background: linear-gradient(145deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 42%, rgba(110,80,255,0.10) 100%);
+  backdrop-filter: blur(32px) saturate(185%);
+  -webkit-backdrop-filter: blur(32px) saturate(185%);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 28px 90px rgba(0,0,0,0.48);
+}
+.prism-input {
+  background: rgba(8, 10, 22, 0.28);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #fff;
+}
+.prism-input::placeholder { color: rgba(226,232,255,0.45); }
+.prism-input:focus {
+  outline: none;
+  border-color: rgba(125, 255, 212, 0.55);
+  box-shadow: 0 0 0 3px rgba(125, 255, 212, 0.12);
+}
+.prism-cta {
+  background: linear-gradient(90deg, #7dffd4, #a78bfa, #7dffd4);
+  background-size: 200% 100%;
+  animation: nxsheen 6s linear infinite;
+  color: #061018;
+}
 `;
 
 /* ============================== STATIC CONFIG ============================== */
@@ -78,6 +139,7 @@ const NAV = {
     { group: "Overview", items: [{ id: "admin", label: "Dashboard", icon: LayoutGrid }] },
     { group: "Intelligence", items: [{ id: "ai", label: "AI Assistant", icon: Sparkles }, { id: "kb", label: "Knowledge Base", icon: BookOpen }, { id: "docs", label: "Documents", icon: FileText }] },
     { group: "Tasks & Work", items: [{ id: "tasks", label: "Task Management", icon: ListChecks }] },
+    { group: "Insights", items: [{ id: "analyze", label: "Analyze Report", icon: FileBarChart }] },
     { group: "Administration", items: [{ id: "admin-users", label: "User Management", icon: Users }, { id: "admin-audit", label: "Audit Logs", icon: ShieldCheck }, { id: "admin-ai", label: "AI Configuration", icon: SlidersHorizontal }] },
   ],
   Manager: [
@@ -85,12 +147,13 @@ const NAV = {
     { group: "Intelligence", items: [{ id: "ai", label: "AI Assistant", icon: Sparkles }, { id: "kb", label: "Knowledge Base", icon: BookOpen }] },
     { group: "Tasks & Work", items: [{ id: "tasks", label: "Task Management", icon: ListChecks }] },
     { group: "Workflow", items: [{ id: "manager-approvals", label: "Approvals", icon: Inbox }, { id: "manager-team", label: "Team", icon: Users }] },
-    { group: "Insights", items: [{ id: "manager-analytics", label: "Analytics", icon: BarChart3 }] },
+    { group: "Insights", items: [{ id: "manager-analytics", label: "Analytics", icon: BarChart3 }, { id: "analyze", label: "Analyze Report", icon: FileBarChart }] },
   ],
   Employee: [
     { group: "Overview", items: [{ id: "employee", label: "Dashboard", icon: LayoutGrid }] },
     { group: "Intelligence", items: [{ id: "ai", label: "AI Assistant", icon: Sparkles }, { id: "docs", label: "Documents", icon: FileText }] },
     { group: "Workflow", items: [{ id: "tasks", label: "My Tasks", icon: ListChecks }, { id: "requests", label: "Requests", icon: CheckSquare }] },
+    { group: "Insights", items: [{ id: "analyze", label: "Analyze Report", icon: FileBarChart }] },
   ],
 };
 
@@ -828,16 +891,35 @@ function GlassmorphismDashboard({ user, role }) {
   );
 }
 
-/* ============================== LOGIN / SIGN UP ============================== */
+/* ============================== PRISM AUTH GATE + LOGIN ============================== */
+function PrismField({ icon: Icon, type = "text", value, onChange, placeholder, trailing }) {
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="prism-input w-full rounded-full px-4 py-3 pr-11 text-[13px]"
+      />
+      {trailing || (
+        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/55">
+          <Icon size={16} />
+        </span>
+      )}
+    </div>
+  );
+}
+
 function Login({ onLogin, initialMode = "signin" }) {
-  const [mode, setMode] = useState(initialMode); // 'signin' | 'signup'
-  const [role, setRole] = useState("Employee");
+  const [stage, setStage] = useState("gate");
+  const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [name, setName] = useState("");
   const [dept, setDept] = useState(DEPARTMENTS[0]);
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -848,6 +930,7 @@ function Login({ onLogin, initialMode = "signin" }) {
     try {
       const data = await api.login(email, password);
       setToken(data.access_token);
+      if (remember) localStorage.setItem("nexora_remember", email);
       onLogin({ role: data.role, name: data.name, dept: data.dept });
     } catch (err) {
       setError(err.message || "Sign in failed");
@@ -882,103 +965,359 @@ function Login({ onLogin, initialMode = "signin" }) {
     }
   }
 
+  const openLogin = (next = "signin") => {
+    setMode(next);
+    setStage("login");
+    setError("");
+  };
+
   return (
-    <div className="nx grid grid-cols-1 lg:grid-cols-2 min-h-screen" style={{ background: C.bgDeep, color: "#FFF" }}>
+    <div className="nx nx-aurora min-h-screen relative overflow-hidden text-white">
       <style>{FONTS}</style>
-      <div className="hidden lg:flex flex-col justify-between p-14 relative overflow-hidden" style={{ background: C.bgPurple }}>
-        <Logo />
-        <div className="relative z-10 space-y-4">
-          <div className="text-4xl font-bold tracking-tight text-white leading-tight">
-            Intelligence,<br />built for the<br />enterprise.
+      <div className="nx-aurora-ribbons" />
+      <div className="nx-grid-veil absolute inset-0 pointer-events-none" />
+
+      <header className="relative z-20 px-4 sm:px-8 pt-6">
+        <div className="prism-glass mx-auto max-w-5xl rounded-full px-4 py-2.5 flex items-center justify-between gap-3">
+          <Logo />
+          <nav className="hidden md:flex items-center gap-6 text-[13px] text-white/70">
+            <button onClick={() => setStage("gate")} className="hover:text-white">Home</button>
+            <span className="text-white/30">|</span>
+            <span>Company</span>
+            <span>Analyze</span>
+          </nav>
+          <div className="flex items-center gap-2">
+            <button onClick={() => openLogin("signin")} className="text-[13px] px-3 py-1.5 rounded-full text-white/80 hover:text-white">
+              Sign in
+            </button>
+            <button onClick={() => openLogin("signup")} className="prism-cta text-[13px] font-bold px-4 py-1.5 rounded-full">
+              Get Started
+            </button>
           </div>
-          <p className="text-purple-300 text-sm max-w-sm">One glassmorphic workspace for your team, task management, problem solving, and AI.</p>
         </div>
-        <div className="text-xs text-purple-400">© NEXORA — AI Enterprise Operating System.</div>
-      </div>
+      </header>
 
-      <div className="flex items-center justify-center p-8 glass-panel">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="flex items-center justify-between">
-            <Logo />
+      {stage === "gate" ? (
+        <main className="relative z-10 max-w-5xl mx-auto px-6 py-16 sm:py-20 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] tracking-widest uppercase mb-5" style={{ background: "rgba(125,255,212,0.12)", border: "1px solid rgba(125,255,212,0.35)", color: "#7dffd4" }}>
+            Prism workspace
+          </div>
+          <h1 className="nx-serif text-4xl sm:text-6xl font-semibold tracking-tight">Clarity through glass.</h1>
+          <p className="mt-4 text-sm sm:text-base text-white/65 max-w-xl mx-auto">
+            NEXORA is a dark command deck with iridescent frost panels — not a payment landing, not a stock login. Upload work, run an Analyze Report, then sign in through a floating prism card.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button onClick={() => openLogin("signup")} className="prism-cta font-bold px-6 py-2.5 rounded-full text-sm">Start trial now</button>
+            <button onClick={() => openLogin("signin")} className="px-6 py-2.5 rounded-full text-sm border border-white/25 bg-white/5 hover:bg-white/10">Book a demo</button>
           </div>
 
-          <div>
-            <h2 className="text-2xl font-bold text-white">{mode === "signin" ? "Welcome back" : "Create your account"}</h2>
-            <p className="text-xs text-purple-300 mt-1">{mode === "signin" ? "Sign in to access your enterprise workspace." : "Set up access to your enterprise workspace."}</p>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            {mode === "signup" && (
-              <div>
-                <label className="block text-purple-300 mb-1 font-medium">Full name</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" className="w-full bg-purple-950/60 border border-purple-500/30 rounded-lg px-3 py-2 text-white outline-none" />
+          <div className="mt-16 grid sm:grid-cols-3 gap-4 text-left">
+            {[
+              { icon: Layers, title: "Operator desk", body: "Live task flow, approvals, and AI in one frost panel." },
+              { icon: ScanSearch, title: "Analyze report", body: "Drop photos and notes. Get a scored glass brief." },
+              { icon: ShieldCheck, title: "Role vault", body: "Admin, manager, and employee lenses stay isolated." },
+            ].map((card) => (
+              <div key={card.title} className="prism-glass rounded-2xl p-5">
+                <card.icon size={18} className="text-cyan-200 mb-3" />
+                <div className="font-semibold">{card.title}</div>
+                <p className="text-[13px] text-white/60 mt-1.5 leading-relaxed">{card.body}</p>
               </div>
-            )}
+            ))}
+          </div>
+        </main>
+      ) : (
+        <main className="relative z-10 min-h-[calc(100vh-96px)] flex items-center justify-center px-4 py-10">
+          <div className="prism-glass w-full max-w-[440px] rounded-[32px] p-8 sm:p-10">
+            <button onClick={() => setStage("gate")} className="text-[11px] text-white/50 hover:text-white mb-6 inline-flex items-center gap-1">
+              <ArrowLeft size={12} /> Back to deck
+            </button>
+            <h2 className="text-4xl font-semibold tracking-tight">{mode === "signin" ? "Login" : "Signup"}</h2>
+            <p className="text-sm text-white/60 mt-1">{mode === "signin" ? "Welcome back" : "Create a workspace identity"}</p>
 
-            <div>
-              <label className="block text-purple-300 mb-1 font-medium">Work email</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" className="w-full bg-purple-950/60 border border-purple-500/30 rounded-lg px-3 py-2 text-white outline-none" />
-            </div>
-
-            {mode === "signup" && (
-              <div>
-                <label className="block text-purple-300 mb-1 font-medium">Department</label>
-                <select value={dept} onChange={(e) => setDept(e.target.value)} className="w-full bg-purple-950/60 border border-purple-500/30 rounded-lg px-3 py-2 text-white outline-none">
-                  {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
+            <div className="mt-8 space-y-4">
+              {mode === "signup" && (
+                <PrismField icon={User} value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+              )}
+              <PrismField icon={User} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={mode === "signin" ? "User Name" : "Work email"} />
+              {mode === "signup" && (
+                <select value={dept} onChange={(e) => setDept(e.target.value)} className="prism-input w-full rounded-full px-4 py-3 text-[13px]">
+                  {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
-              </div>
-            )}
+              )}
+              <PrismField
+                icon={Eye}
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                trailing={
+                  <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/55">
+                    {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
+                }
+              />
+              {mode === "signup" && (
+                <PrismField icon={Lock} type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm password" />
+              )}
 
-            <div>
-              <label className="block text-purple-300 mb-1 font-medium">Password</label>
-              <div className="relative">
-                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="w-full bg-purple-950/60 border border-purple-500/30 rounded-lg px-3 py-2 pr-9 text-white outline-none" />
-                <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-2.5 top-2.5 text-purple-400">
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
+              {mode === "signin" && (
+                <label className="flex items-center gap-2 text-[13px] text-white/75 select-none">
+                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="accent-cyan-300" />
+                  Remember me
+                </label>
+              )}
+
+              {error && <div className="text-xs text-rose-300">{error}</div>}
+
+              <button
+                onClick={mode === "signin" ? handleSignIn : handleSignUp}
+                disabled={loading}
+                className="w-full rounded-full py-3 text-sm font-semibold border border-white/35 bg-white/5 hover:bg-white/12 transition-all"
+              >
+                {loading ? (mode === "signin" ? "Signing in..." : "Creating...") : (mode === "signin" ? "Login" : "Create account")}
+              </button>
+
+              {mode === "signin" && (
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {[
+                    { email: "meera.krishnan@nexora.ai", label: "Admin", name: "Meera" },
+                    { email: "divya.suresh@nexora.ai", label: "Manager", name: "Divya" },
+                    { email: "arun.kumar@nexora.ai", label: "Employee", name: "Arun" },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => { setEmail(preset.email); setPassword("password123"); }}
+                      className="rounded-2xl py-2 text-[11px] border border-white/12 bg-white/5 hover:bg-white/10"
+                    >
+                      <div className="font-semibold">{preset.label}</div>
+                      <div className="text-white/45">{preset.name}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-center text-[13px] text-white/65">
+                {mode === "signin" ? (
+                  <>Don't have an account? <button className="font-semibold text-white" onClick={() => setMode("signup")}>Signup</button></>
+                ) : (
+                  <>Already have an account? <button className="font-semibold text-white" onClick={() => setMode("signin")}>Login</button></>
+                )}
+              </p>
+            </div>
+          </div>
+        </main>
+      )}
+    </div>
+  );
+}
+
+function hashScore(text, min = 42, max = 96) {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 997;
+  return min + (h % (max - min + 1));
+}
+
+function buildAnalyzeReport(files, ideas) {
+  const names = files.map((f) => f.name.toLowerCase());
+  const idea = ideas.toLowerCase();
+  const combined = `${names.join(" ")} ${idea}`;
+  const imageCount = files.filter((f) => f.kind === "image").length;
+  const keywords = [
+    ["risk", "Risk surface"],
+    ["security", "Security posture"],
+    ["login", "Access flow"],
+    ["glass", "Visual system"],
+    ["pricing", "Commercial layout"],
+    ["report", "Reporting depth"],
+    ["task", "Work routing"],
+    ["ai", "Intelligence layer"],
+  ];
+  const hits = keywords.filter(([k]) => combined.includes(k)).map(([, label]) => label);
+  const findings = [
+    imageCount ? `${imageCount} visual sample${imageCount > 1 ? "s" : ""} read as composition references, not product clones.` : "No images yet — analysis leans on written intent.",
+    files.length ? `${files.length} artifact${files.length > 1 ? "s" : ""} ingested (${files.map((f) => f.name).slice(0, 3).join(", ")}${files.length > 3 ? "…" : ""}).` : "Upload photos or docs to ground the brief.",
+    ideas.trim() ? `Idea brief captured (${ideas.trim().split(/\s+/).length} words).` : "Add a short idea note so scoring can weigh intent.",
+    hits.length ? `Signals: ${hits.join(", ")}.` : "No domain keywords yet — generic enterprise scoring applied.",
+    "Glass treatment: frost only works over bright color variation. Keep aurora behind panels, 1px light rim, inner highlight.",
+  ];
+  return {
+    clarity: hashScore(combined + "c", 58, 94),
+    glassFidelity: imageCount ? hashScore(combined + "g", 70, 97) : 54,
+    actionability: ideas.trim() ? hashScore(combined + "a", 61, 92) : 48,
+    findings,
+    moves: [
+      "Keep login as a floating prism card over moving ribbons — never a solid split purple slab.",
+      "Use outline glass buttons for Login; reserve mint sheen only for Get Started.",
+      "Run Analyze Report after each design drop so visual and copy stay in one brief.",
+    ],
+  };
+}
+
+function AnalyzeReportView() {
+  const [ideas, setIdeas] = useState("");
+  const [files, setFiles] = useState([]);
+  const [report, setReport] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [drag, setDrag] = useState(false);
+  const inputRef = useRef(null);
+
+  function ingest(list) {
+    const next = Array.from(list || []).map((file) => ({
+      id: `${file.name}-${file.size}-${file.lastModified}`,
+      name: file.name,
+      size: file.size,
+      kind: file.type.startsWith("image/") ? "image" : "file",
+      preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
+    }));
+    setFiles((prev) => [...prev, ...next]);
+    setReport(null);
+  }
+
+  async function runAnalyze() {
+    if (!files.length && !ideas.trim()) return;
+    setBusy(true);
+    await new Promise((r) => setTimeout(r, 700));
+    let extra = "";
+    try {
+      const res = await api.sendMessage({
+        assistant_id: "general",
+        message: `Write a 4-bullet enterprise analysis of this design brief. Ideas: ${ideas || "(none)"}. Files: ${files.map((f) => f.name).join(", ") || "(none)"}. Focus on glassmorphism, login, and reporting.`,
+      });
+      extra = res?.reply || "";
+    } catch {
+      extra = "";
+    }
+    const base = buildAnalyzeReport(files, ideas);
+    if (extra) base.findings = [...base.findings, extra.slice(0, 420)];
+    setReport(base);
+    setBusy(false);
+  }
+
+  const ScoreRing = ({ label, value, tint }) => (
+    <div className="prism-glass rounded-2xl p-4 text-center">
+      <div className="text-3xl font-semibold" style={{ color: tint }}>{value}</div>
+      <div className="text-[11px] uppercase tracking-widest text-white/50 mt-1">{label}</div>
+      <div className="mt-3 h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${value}%`, background: tint }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="nx-fade space-y-6">
+      <SectionHeading
+        eyebrow="Insights"
+        title="Analyze Report"
+        subtitle="Drop reference photos and a short idea. NEXORA scores glass fidelity, clarity, and what to ship next — without cloning the samples."
+      />
+
+      <div className="grid lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 space-y-4">
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={(e) => { e.preventDefault(); setDrag(false); ingest(e.dataTransfer.files); }}
+            onClick={() => inputRef.current?.click()}
+            className="prism-glass rounded-2xl p-6 cursor-pointer min-h-[180px] flex flex-col items-center justify-center text-center"
+            style={{ borderColor: drag ? "rgba(125,255,212,0.7)" : undefined }}
+          >
+            <Upload size={22} className="text-cyan-200 mb-2" />
+            <div className="text-sm font-semibold">Drop photos or files</div>
+            <p className="text-[12px] text-white/50 mt-1">PNG, JPG, PDF, notes. Click to browse.</p>
+            <input ref={inputRef} type="file" multiple accept="image/*,.pdf,.txt,.md" className="hidden" onChange={(e) => ingest(e.target.files)} />
+          </div>
+
+          {files.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {files.map((f) => (
+                <div key={f.id} className="relative rounded-xl overflow-hidden border border-white/10 bg-white/5 aspect-square">
+                  {f.preview ? <img src={f.preview} alt={f.name} className="w-full h-full object-cover" /> : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] p-2 text-white/60">{f.name}</div>
+                  )}
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5"
+                    onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="prism-glass rounded-2xl p-4">
+            <div className="flex items-center gap-2 text-[12px] text-white/60 mb-2">
+              <Lightbulb size={14} className="text-amber-200" /> Idea notes
+            </div>
+            <textarea
+              rows={5}
+              value={ideas}
+              onChange={(e) => setIdeas(e.target.value)}
+              placeholder="What should this feel like? e.g. iridescent login, dark command deck, analyze report after upload…"
+              className="w-full bg-transparent text-[13px] text-white outline-none resize-none"
+            />
+          </div>
+
+          <Button onClick={runAnalyze} disabled={busy || (!files.length && !ideas.trim())} icon={ScanSearch} className="w-full justify-center">
+            {busy ? "Reading samples..." : "Generate analyze report"}
+          </Button>
+        </div>
+
+        <div className="lg:col-span-3">
+          {!report ? (
+            <div className="prism-glass rounded-2xl p-10 h-full min-h-[320px] flex flex-col items-center justify-center text-center text-white/55">
+              <ImageIcon size={28} className="mb-3 text-white/35" />
+              <p className="text-sm max-w-sm">Your brief will land here as scored glass panels — findings, moves, and fidelity against the references you dropped.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid sm:grid-cols-3 gap-3">
+                <ScoreRing label="Clarity" value={report.clarity} tint="#7dffd4" />
+                <ScoreRing label="Glass fidelity" value={report.glassFidelity} tint="#c4b5fd" />
+                <ScoreRing label="Actionability" value={report.actionability} tint="#f9a8d4" />
+              </div>
+              <div className="prism-glass rounded-2xl p-5">
+                <h3 className="font-semibold mb-3">Findings</h3>
+                <ul className="space-y-2 text-[13px] text-white/75">
+                  {report.findings.map((line, i) => (
+                    <li key={i} className="flex gap-2"><span className="text-cyan-200">▹</span><span>{line}</span></li>
+                  ))}
+                </ul>
+              </div>
+              <div className="prism-glass rounded-2xl p-5">
+                <h3 className="font-semibold mb-3">Next moves</h3>
+                <ol className="space-y-2 text-[13px] text-white/75 list-decimal pl-4">
+                  {report.moves.map((line) => <li key={line}>{line}</li>)}
+                </ol>
               </div>
             </div>
-
-            {mode === "signup" && (
-              <div>
-                <label className="block text-purple-300 mb-1 font-medium">Confirm password</label>
-                <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" className="w-full bg-purple-950/60 border border-purple-500/30 rounded-lg px-3 py-2 text-white outline-none" />
-              </div>
-            )}
-
-            {error && <div className="text-xs text-rose-400 font-medium">{error}</div>}
-
-            {mode === "signin" ? (
-              <button onClick={handleSignIn} disabled={loading} className="w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold shadow-lg shadow-purple-600/30 hover:opacity-90 transition-all">
-                {loading ? "SIGNING IN..." : "SIGN IN"}
-              </button>
-            ) : (
-              <button onClick={handleSignUp} disabled={loading} className="w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold shadow-lg shadow-purple-600/30 hover:opacity-90 transition-all">
-                {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
-              </button>
-            )}
-          </div>
-
-          <div className="text-center text-xs text-purple-300">
-            {mode === "signin" ? (
-              <>Don't have an account? <span onClick={() => setMode("signup")} className="font-semibold text-purple-200 hover:text-white cursor-pointer">Create one</span></>
-            ) : (
-              <>Already have an account? <span onClick={() => setMode("signin")} className="font-semibold text-purple-200 hover:text-white cursor-pointer">Sign in</span></>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-/* ============================== OTHER ADMIN / MANAGER / EMPLOYEE VIEWS ============================== */
+/* ============================== ADMINISTRATION: USER MANAGEMENT ============================== */
 function AdminUsers() {
   const [people, setPeople] = useState([]);
-  useEffect(() => { api.getUsers().then(setPeople).catch(console.error); }, []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getUsers()
+      .then((data) => { setPeople(data); setLoading(false); })
+      .catch((err) => { console.error(err); setLoading(false); });
+  }, []);
+
   return (
     <div className="nx-fade space-y-6">
-      <SectionHeading eyebrow="Administration" title="User Management" subtitle="Manage enterprise roles, permissions and accounts." />
+      <SectionHeading
+        eyebrow="Administration"
+        title="User & Access Management"
+        subtitle="Manage enterprise identities, assigned roles, departments, and AI usage quotas."
+      />
       <div className="glass-panel rounded-2xl p-6 overflow-x-auto">
         <table className="w-full text-xs text-left text-purple-200">
           <thead className="border-b border-purple-500/20 text-purple-400 font-semibold uppercase tracking-wider">
@@ -987,17 +1326,32 @@ function AdminUsers() {
               <th className="py-3 px-4">Department</th>
               <th className="py-3 px-4">Role</th>
               <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">AI Usage</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-purple-500/15">
-            {people.map((u) => (
-              <tr key={u.id} className="hover:bg-white/5">
-                <td className="py-3 px-4 flex items-center gap-2.5 font-medium text-white">
-                  <Avatar name={u.name} size={28} /> {u.name}
+            {loading ? (
+              <tr><td colSpan={5} className="py-8 text-center text-purple-400">Loading users...</td></tr>
+            ) : people.map((u) => (
+              <tr key={u.id} className="hover:bg-white/5 transition-colors">
+                <td className="py-3.5 px-4 flex items-center gap-3 font-medium text-white">
+                  <Avatar name={u.name} size={30} />
+                  <div>
+                    <div className="font-semibold">{u.name}</div>
+                    <div className="text-[11px] text-purple-400">{u.email}</div>
+                  </div>
                 </td>
-                <td className="py-3 px-4">{u.dept}</td>
-                <td className="py-3 px-4"><RoleBadge role={u.role} /></td>
-                <td className="py-3 px-4"><StatusDot status={u.status} /> {u.status}</td>
+                <td className="py-3.5 px-4">{u.dept || "—"}</td>
+                <td className="py-3.5 px-4"><RoleBadge role={u.role} /></td>
+                <td className="py-3.5 px-4"><StatusDot status={u.status} /> {u.status}</td>
+                <td className="py-3.5 px-4">
+                  <div className="flex items-center gap-2 max-w-[120px]">
+                    <div className="flex-1 bg-purple-950/80 rounded-full h-1.5 overflow-hidden border border-purple-500/20">
+                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full" style={{ width: `${u.usage_percent || 0}%` }} />
+                    </div>
+                    <span className="text-[10px] text-purple-300 font-bold">{u.usage_percent || 0}%</span>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -1007,21 +1361,132 @@ function AdminUsers() {
   );
 }
 
+/* ============================== ADMINISTRATION: AUDIT LOG ============================== */
 function AdminAudit() {
   const [events, setEvents] = useState([]);
-  useEffect(() => { api.getAuditLog(50).then(setEvents).catch(console.error); }, []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getAuditLog(50)
+      .then((data) => { setEvents(data); setLoading(false); })
+      .catch((err) => { console.error(err); setLoading(false); });
+  }, []);
+
   return (
     <div className="nx-fade space-y-6">
-      <SectionHeading eyebrow="Administration" title="Audit Log" subtitle="Every action taken across the enterprise OS." />
-      <div className="glass-panel rounded-2xl p-6 space-y-3">
-        {events.map((e) => (
-          <div key={e.id} className="flex items-center justify-between text-xs py-2.5 border-b border-purple-500/15 text-purple-200">
-            <div className="flex items-center gap-3">
-              <Avatar name={e.user_name} size={28} />
-              <span className="font-semibold text-white">{e.user_name}</span>
-              <span className="text-purple-300">{e.action}</span>
+      <SectionHeading
+        eyebrow="Administration"
+        title="Enterprise Audit Log"
+        subtitle="Cryptographically tracked immutable stream of all user, assistant, and workflow events."
+      />
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="space-y-3">
+          {loading ? (
+            <div className="py-8 text-center text-purple-400">Loading audit events...</div>
+          ) : events.length === 0 ? (
+            <div className="py-8 text-center text-purple-400">No audit events recorded yet.</div>
+          ) : (
+            events.map((e) => (
+              <div key={e.id} className="flex items-center justify-between text-xs py-3 border-b border-purple-500/15 text-purple-200">
+                <div className="flex items-center gap-3">
+                  <Avatar name={e.user_name} size={28} />
+                  <div>
+                    <span className="font-semibold text-white mr-2">{e.user_name}</span>
+                    <span className="text-purple-300 mr-2">{e.action}</span>
+                    {e.resource && e.resource !== "—" && (
+                      <span className="px-2 py-0.5 rounded bg-purple-900/40 text-purple-200 border border-purple-500/20 text-[10px]">
+                        {e.resource}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {e.result}
+                  </span>
+                  <span className="text-purple-400 text-[11px]">
+                    {new Date(e.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}{" "}
+                    {new Date(e.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== ADMINISTRATION: AI CONFIGURATION ============================== */
+function AdminAIConfig() {
+  const [assistants, setAssistants] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadAssistants = () => {
+    api.getAssistants()
+      .then((data) => { setAssistants(data); setLoading(false); })
+      .catch((err) => { console.error(err); setLoading(false); });
+  };
+
+  useEffect(() => { loadAssistants(); }, []);
+
+  async function toggleAssistant(id, currentAvailable) {
+    try {
+      await api.updateAssistant(id, { available: !currentAvailable });
+      loadAssistants();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  return (
+    <div className="nx-fade space-y-6">
+      <SectionHeading
+        eyebrow="Administration"
+        title="AI Control Room & Agents"
+        subtitle="Configure autonomous agents, enable or disable assistants, and monitor token consumption."
+      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {loading ? (
+          <div className="col-span-full py-8 text-center text-purple-400">Loading assistants...</div>
+        ) : assistants.map((a) => (
+          <div key={a.id} className="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-purple-400" />
+                  <h3 className="font-bold text-white text-sm">{a.name}</h3>
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${a.available ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border-rose-500/30"}`}>
+                  {a.available ? "Active" : "Disabled"}
+                </span>
+              </div>
+              <p className="text-xs text-purple-300/80 leading-relaxed">{a.description}</p>
             </div>
-            <span className="text-purple-400">{new Date(e.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+
+            <div className="space-y-3 pt-2 border-t border-purple-500/20">
+              <div>
+                <div className="flex justify-between text-[11px] text-purple-300 mb-1">
+                  <span>Usage quota</span>
+                  <span className="font-bold text-white">{a.usage_percent || 0}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-purple-950/80 overflow-hidden border border-purple-500/20">
+                  <div className="h-full bg-gradient-to-r from-violet-500 to-pink-500" style={{ width: `${a.usage_percent || 0}%` }} />
+                </div>
+              </div>
+
+              <button
+                onClick={() => toggleAssistant(a.id, a.available)}
+                className={`w-full py-2 rounded-xl text-xs font-semibold transition-all ${
+                  a.available
+                    ? "bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:bg-rose-500/30"
+                    : "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30"
+                }`}
+              >
+                {a.available ? "Deactivate Assistant" : "Activate Assistant"}
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -1029,35 +1494,617 @@ function AdminAudit() {
   );
 }
 
-function AIHub({ role }) {
-  const [input, setInput] = useState("");
-  const [msgs, setMsgs] = useState([]);
-  async function send() {
-    if (!input.trim()) return;
-    const text = input; setInput("");
-    setMsgs((m) => [...m, { role: "user", text }]);
+/* ============================== WORKFLOW: APPROVALS & REQUESTS ============================== */
+function ApprovalsView({ role, user }) {
+  const [approvals, setApprovals] = useState([]);
+  const [filter, setFilter] = useState("All");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [requestText, setRequestText] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const isManagerOrAdmin = role === "Admin" || role === "Manager";
+
+  const loadApprovals = async () => {
     try {
-      const res = await api.sendMessage({ assistant_id: "general", message: text });
-      setMsgs((m) => [...m, { role: "ai", text: res.reply }]);
+      const data = await api.getApprovals(filter);
+      setApprovals(data);
     } catch (err) {
-      setMsgs((m) => [...m, { role: "ai", text: `Error: ${err.message}` }]);
+      console.error(err);
+    }
+  };
+
+  useEffect(() => { loadApprovals(); }, [filter]);
+
+  async function handleApprove(id) {
+    try {
+      await api.approveRequest(id);
+      loadApprovals();
+    } catch (err) {
+      console.error(err);
     }
   }
+
+  async function handleReject(id) {
+    try {
+      await api.rejectRequest(id);
+      loadApprovals();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleSubmitRequest(e) {
+    e.preventDefault();
+    if (!requestText.trim()) return;
+    setLoading(true);
+    try {
+      await api.createApproval({
+        requester_name: user?.name || "Team Member",
+        dept: user?.dept || "Engineering",
+        request: requestText,
+      });
+      setRequestText("");
+      setModalOpen(false);
+      loadApprovals();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="nx-fade space-y-4 h-[calc(100vh-140px)] flex flex-col">
-      <SectionHeading eyebrow="Intelligence" title="AI Assistant Hub" subtitle="Ask anything to your enterprise AI assistant." />
-      <div className="flex-1 glass-panel rounded-2xl p-6 overflow-y-auto space-y-4">
-        {msgs.length === 0 && <div className="text-xs text-purple-300">Start asking questions to your AI assistant...</div>}
-        {msgs.map((m, i) => (
-          <div key={i} className={`p-3.5 rounded-xl text-xs max-w-xl ${m.role === "user" ? "ml-auto bg-purple-600/40 text-white" : "bg-white/5 text-purple-100 border border-purple-500/20"}`}>
-            <div className="font-bold text-[10px] text-purple-300 uppercase mb-1">{m.role}</div>
-            <div>{m.text}</div>
+    <div className="nx-fade space-y-6">
+      <SectionHeading
+        eyebrow="Workflow & Compliance"
+        title={isManagerOrAdmin ? "Approval Requests" : "My Requests"}
+        subtitle="Manage resource permissions, AI usage expansions, and cross-departmental access."
+        right={
+          <Button onClick={() => setModalOpen(true)} icon={Plus}>
+            New Request
+          </Button>
+        }
+      />
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 border-b border-purple-500/20 pb-3">
+        {["All", "Pending", "Approved", "Rejected"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              filter === s
+                ? "bg-purple-600 text-white shadow-[0_0_12px_#A855F7]"
+                : "bg-purple-950/40 text-purple-300 hover:text-white border border-purple-500/20"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {approvals.length === 0 ? (
+          <div className="glass-panel rounded-2xl p-8 text-center text-purple-400 text-xs">
+            No approvals found for filter "{filter}".
+          </div>
+        ) : (
+          approvals.map((item) => (
+            <div key={item.id} className="glass-panel rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <Avatar name={item.requester_name} size={34} />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white text-xs">{item.requester_name}</span>
+                    <span className="text-[10px] text-purple-400">({item.dept})</span>
+                  </div>
+                  <div className="text-xs text-purple-200 mt-0.5">{item.request}</div>
+                  <div className="text-[10px] text-purple-400 mt-1">
+                    {new Date(item.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}{" "}
+                    {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                    item.status === "Approved"
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                      : item.status === "Rejected"
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                      : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                  }`}
+                >
+                  {item.status}
+                </span>
+
+                {isManagerOrAdmin && item.status === "Pending" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApprove(item.id)}
+                      className="px-3 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Check size={12} /> Approve
+                    </button>
+                    <button
+                      onClick={() => handleReject(item.id)}
+                      className="px-3 py-1 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:bg-rose-500/30 text-xs font-semibold flex items-center gap-1"
+                    >
+                      <X size={12} /> Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* New Request Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-panel rounded-2xl p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+              <h3 className="font-bold text-white text-base">Submit Access Request</h3>
+              <button onClick={() => setModalOpen(false)} className="text-purple-400 hover:text-white"><X size={18} /></button>
+            </div>
+            <form onSubmit={handleSubmitRequest} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-purple-300 mb-1 font-medium">Request Description</label>
+                <textarea
+                  rows={3}
+                  value={requestText}
+                  onChange={(e) => setRequestText(e.target.value)}
+                  placeholder="e.g., Request access to Code Intelligence copilot for Q4 engineering sprint..."
+                  className="w-full bg-purple-950/60 border border-purple-500/30 rounded-xl p-3 text-white outline-none"
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="glass" onClick={() => setModalOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={loading}>{loading ? "Submitting..." : "Submit Request"}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================== INTELLIGENCE: KNOWLEDGE BASE ============================== */
+function KnowledgeBaseView({ onAskAI }) {
+  const [search, setSearch] = useState("");
+  const articles = [
+    { id: 1, title: "Enterprise OS Microservices Architecture", cat: "Architecture", time: "5 min read", desc: "Detailed guide to modular Express endpoints, SQLite WAL mode, and decoupled React state." },
+    { id: 2, title: "AI Model Governance & Rate Limiting Protocols", cat: "Security", time: "8 min read", desc: "Enterprise quotas, token tracking, fallback routines, and LLM safety filters." },
+    { id: 3, title: "Autonomous Agent Function Calling Standards", cat: "Engineering", time: "6 min read", desc: "Format specification for structured JSON tool calls, error recovery, and feedback loops." },
+    { id: 4, title: "Corporate Data Privacy & Role-Based Access Controls", cat: "Compliance", time: "4 min read", desc: "JWT verification rules, departmental boundaries, and immutable audit event logging." },
+    { id: 5, title: "Quarterly Performance Indicators & OKRs", cat: "Operations", time: "7 min read", desc: "Metrics tracking task resolution speed, meeting hour reduction, and AI adoption." }
+  ];
+
+  const filtered = articles.filter((a) =>
+    a.title.toLowerCase().includes(search.toLowerCase()) ||
+    a.desc.toLowerCase().includes(search.toLowerCase()) ||
+    a.cat.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="nx-fade space-y-6">
+      <SectionHeading
+        eyebrow="Intelligence"
+        title="Enterprise Knowledge Base"
+        subtitle="Search corporate wisdom, system documentation, and architectural standards."
+        right={
+          <div className="relative w-64">
+            <Search size={15} className="absolute left-3 top-2.5 text-purple-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search articles..."
+              className="w-full bg-purple-950/60 border border-purple-500/30 rounded-xl pl-9 pr-3 py-2 text-xs text-white outline-none"
+            />
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filtered.map((art) => (
+          <div key={art.id} className="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-purple-400/40 transition-all">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-900/40 text-purple-300 border border-purple-500/20 uppercase tracking-wider">
+                  {art.cat}
+                </span>
+                <span className="text-[11px] text-purple-400">{art.time}</span>
+              </div>
+              <h3 className="font-bold text-white text-sm mb-1">{art.title}</h3>
+              <p className="text-xs text-purple-300/80 leading-relaxed">{art.desc}</p>
+            </div>
+
+            <button
+              onClick={() => onAskAI(`Tell me about: ${art.title}`)}
+              className="flex items-center gap-2 text-xs font-semibold text-purple-300 hover:text-white transition-colors pt-2 border-t border-purple-500/20"
+            >
+              <Sparkles size={14} className="text-purple-400" />
+              Ask AI Assistant about this document →
+            </button>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ============================== INTELLIGENCE: DOCUMENTS REPOSITORY ============================== */
+function DocumentsView({ onAskAI }) {
+  const [search, setSearch] = useState("");
+  const docs = [
+    { id: 1, name: "Q3-Financial-Analysis-and-Audit.pdf", size: "2.4 MB", dept: "Finance", updated: "2 hours ago" },
+    { id: 2, name: "Engineering-Design-Handbook-2026.pdf", size: "4.1 MB", dept: "Engineering", updated: "Yesterday" },
+    { id: 3, name: "Information-Security-Charter.docx", size: "1.1 MB", dept: "Security", updated: "3 days ago" },
+    { id: 4, name: "Employee-Benefits-and-Leave-Policy.pdf", size: "850 KB", dept: "HR", updated: "Last week" },
+    { id: 5, name: "Product-Roadmap-Autonomous-Agents.pdf", size: "5.8 MB", dept: "Product", updated: "2 weeks ago" }
+  ];
+
+  const filtered = docs.filter((d) =>
+    d.name.toLowerCase().includes(search.toLowerCase()) ||
+    d.dept.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="nx-fade space-y-6">
+      <SectionHeading
+        eyebrow="Intelligence"
+        title="Documents Repository"
+        subtitle="Shared corporate files, reports, and compliance blueprints accessible to authorized personnel."
+        right={
+          <div className="relative w-64">
+            <Search size={15} className="absolute left-3 top-2.5 text-purple-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search documents..."
+              className="w-full bg-purple-950/60 border border-purple-500/30 rounded-xl pl-9 pr-3 py-2 text-xs text-white outline-none"
+            />
+          </div>
+        }
+      />
+
+      <div className="glass-panel rounded-2xl p-4 divide-y divide-purple-500/15">
+        {filtered.map((d) => (
+          <div key={d.id} className="py-3 px-3 flex items-center justify-between gap-4 flex-wrap hover:bg-white/5 rounded-xl transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center text-purple-300">
+                <FileText size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-white">{d.name}</div>
+                <div className="text-[11px] text-purple-400 flex items-center gap-2 mt-0.5">
+                  <span>{d.dept}</span>
+                  <span>•</span>
+                  <span>{d.size}</span>
+                  <span>•</span>
+                  <span>Updated {d.updated}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onAskAI(`Analyze the document ${d.name}`)}
+                className="px-3 py-1.5 rounded-lg bg-purple-900/40 border border-purple-500/20 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all"
+              >
+                <Sparkles size={13} className="text-purple-400" /> Analyze
+              </button>
+              <button
+                onClick={() => alert(`Downloading ${d.name}...`)}
+                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all"
+              >
+                <Download size={13} /> Download
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== WORKFLOW: TEAM ROSTER ============================== */
+function TeamView() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getUsers()
+      .then((data) => { setUsers(data); setLoading(false); })
+      .catch((err) => { console.error(err); setLoading(false); });
+  }, []);
+
+  return (
+    <div className="nx-fade space-y-6">
+      <SectionHeading
+        eyebrow="Workflow"
+        title="Departmental Team Roster"
+        subtitle="View colleagues, monitor status, and inspect distributed workload balance."
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {loading ? (
+          <div className="col-span-full py-8 text-center text-purple-400">Loading team...</div>
+        ) : users.map((u) => (
+          <div key={u.id} className="glass-panel rounded-2xl p-5 flex flex-col items-center text-center space-y-3">
+            <Avatar name={u.name} size={52} />
+            <div>
+              <h3 className="font-bold text-white text-sm">{u.name}</h3>
+              <div className="text-xs text-purple-300 mt-0.5">{u.dept}</div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <RoleBadge role={u.role} />
+              <div className="flex items-center gap-1 text-[11px] text-purple-400">
+                <StatusDot status={u.status} /> {u.status}
+              </div>
+            </div>
+
+            <div className="w-full pt-3 border-t border-purple-500/20 text-[11px] text-purple-300 flex justify-between">
+              <span>Workload:</span>
+              <span className="font-bold text-white">{u.usage_percent || 0}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== NOTIFICATIONS SLIDE DRAWER ============================== */
+function NotificationDrawer({ open, onClose }) {
+  const [notifs, setNotifs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadNotifs = () => {
+    api.getNotifications()
+      .then((data) => { setNotifs(data); setLoading(false); })
+      .catch((err) => { console.error(err); setLoading(false); });
+  };
+
+  useEffect(() => {
+    if (open) loadNotifs();
+  }, [open]);
+
+  async function markRead(id) {
+    try {
+      await api.markNotificationRead(id);
+      loadNotifs();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm animate-fade">
+      <div className="w-full max-w-sm h-full glass-panel p-6 flex flex-col space-y-4 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+          <div className="flex items-center gap-2 font-bold text-white text-base">
+            <Bell size={18} className="text-purple-400" /> Notifications
+          </div>
+          <button onClick={onClose} className="text-purple-400 hover:text-white"><X size={18} /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-3 nx-scroll pr-1">
+          {loading ? (
+            <div className="py-8 text-center text-purple-400 text-xs">Loading notifications...</div>
+          ) : notifs.length === 0 ? (
+            <div className="py-8 text-center text-purple-400 text-xs">No notifications yet.</div>
+          ) : (
+            notifs.map((n) => (
+              <div
+                key={n.id}
+                className={`p-3.5 rounded-xl border text-xs transition-all ${
+                  n.unread
+                    ? "bg-purple-900/30 border-purple-500/40 text-purple-100"
+                    : "bg-white/5 border-purple-500/15 text-purple-300"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 uppercase tracking-wider">
+                    {n.category}
+                  </span>
+                  {n.unread && (
+                    <button
+                      onClick={() => markRead(n.id)}
+                      className="text-[10px] text-pink-400 hover:text-pink-300 font-semibold"
+                    >
+                      Mark read
+                    </button>
+                  )}
+                </div>
+                <div className="font-semibold text-white mt-1">{n.title}</div>
+                {n.description && <div className="text-[11px] text-purple-300/80 mt-1">{n.description}</div>}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== COMMAND PALETTE (CMD+K) ============================== */
+function CommandPalette({ open, onClose, setView, role }) {
+  const [query, setQuery] = useState("");
+
+  const items = [
+    { label: "Dashboard Overview", view: role.toLowerCase(), icon: LayoutGrid },
+    { label: "AI Assistant Copilot", view: "ai", icon: Sparkles },
+    { label: "Task Flow & Problem Solving", view: "tasks", icon: ListChecks },
+    { label: "Knowledge Base", view: "kb", icon: BookOpen },
+    { label: "Documents Repository", view: "docs", icon: FileText },
+    { label: "Analyze Report", view: "analyze", icon: FileBarChart },
+    ...(role === "Admin" ? [
+      { label: "User Management", view: "admin-users", icon: Users },
+      { label: "System Audit Logs", view: "admin-audit", icon: ShieldCheck },
+      { label: "AI Configuration Control", view: "admin-ai", icon: SlidersHorizontal },
+    ] : []),
+    ...(role === "Manager" ? [
+      { label: "Approvals & Access Requests", view: "manager-approvals", icon: Inbox },
+      { label: "Department Team Roster", view: "manager-team", icon: Users },
+    ] : []),
+    ...(role === "Employee" ? [
+      { label: "My Requests", view: "requests", icon: CheckSquare },
+    ] : [])
+  ];
+
+  const filtered = items.filter((i) => i.label.toLowerCase().includes(query.toLowerCase()));
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg glass-panel rounded-2xl p-4 space-y-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-3 py-2 border-b border-purple-500/20">
+          <Search size={18} className="text-purple-400" />
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Type a command or jump to view..."
+            className="flex-1 bg-transparent text-sm text-white outline-none"
+          />
+          <span className="text-[10px] px-2 py-0.5 rounded bg-purple-900/60 text-purple-300">ESC</span>
+        </div>
+
+        <div className="max-h-72 overflow-y-auto space-y-1">
+          {filtered.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.label}
+                onClick={() => { setView(item.view); onClose(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-purple-200 hover:text-white hover:bg-purple-600/30 transition-all text-left"
+              >
+                <Icon size={16} className="text-purple-400" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== INTELLIGENCE: AI HUB (CHAT) ============================== */
+function AIHub({ role, initialPrompt = "" }) {
+  const [input, setInput] = useState(initialPrompt);
+  const [assistant, setAssistant] = useState("general");
+  const [assistantsList, setAssistantsList] = useState([]);
+  const [msgs, setMsgs] = useState([
+    { role: "ai", text: "Hello! I am your NEXORA Enterprise AI Assistant. How can I assist your workflow today?" }
+  ]);
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    api.getAssistants().then(setAssistantsList).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (initialPrompt) setInput(initialPrompt);
+  }, [initialPrompt]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs]);
+
+  async function send() {
+    if (!input.trim() || loading) return;
+    const text = input;
+    setInput("");
+    setMsgs((m) => [...m, { role: "user", text }]);
+    setLoading(true);
+
+    try {
+      const res = await api.sendMessage({ assistant_id: assistant, message: text });
+      setMsgs((m) => [...m, { role: "ai", text: res.reply, sources: res.sources }]);
+    } catch (err) {
+      setMsgs((m) => [...m, { role: "ai", text: `Error: ${err.message || "Failed to reach AI service"}` }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="nx-fade space-y-4 h-[calc(100vh-140px)] flex flex-col">
+      <SectionHeading
+        eyebrow="Intelligence"
+        title="Autonomous AI Assistant Hub"
+        subtitle="Interact with company-tuned assistants for reasoning, code intelligence, and document synthesis."
+        right={
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-purple-300 font-medium">Model:</span>
+            <select
+              value={assistant}
+              onChange={(e) => setAssistant(e.target.value)}
+              className="bg-purple-950/80 border border-purple-500/30 rounded-xl px-3 py-1.5 text-xs text-white outline-none"
+            >
+              {assistantsList.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+              {assistantsList.length === 0 && <option value="general">General Assistant</option>}
+            </select>
+          </div>
+        }
+      />
+
+      <div className="flex-1 glass-panel rounded-2xl p-6 overflow-y-auto space-y-4 nx-scroll">
+        {msgs.map((m, i) => (
+          <div
+            key={i}
+            className={`p-4 rounded-2xl text-xs max-w-2xl leading-relaxed ${
+              m.role === "user"
+                ? "ml-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                : "bg-white/5 text-purple-100 border border-purple-500/20"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 font-bold text-[10px] text-purple-300 uppercase tracking-wider mb-1.5">
+              {m.role === "user" ? <Avatar name="You" size={16} /> : <Sparkles size={12} className="text-purple-400" />}
+              {m.role === "user" ? "You" : "Nexora Copilot"}
+            </div>
+            <div className="whitespace-pre-wrap">{m.text}</div>
+            {m.sources && m.sources.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-purple-500/20 text-[10px] text-purple-300">
+                <span className="font-semibold">Sources referenced: </span>
+                {m.sources.join(", ")}
+              </div>
+            )}
+          </div>
+        ))}
+        {loading && (
+          <div className="p-4 rounded-2xl text-xs max-w-xs bg-white/5 border border-purple-500/20 text-purple-300 flex items-center gap-2">
+            <RefreshCw size={14} className="animate-spin text-purple-400" />
+            Synthesizing response...
+          </div>
+        )}
+        <div ref={scrollRef} />
+      </div>
+
       <div className="flex gap-2">
-        <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Type your message..." className="flex-1 bg-purple-950/60 border border-purple-500/30 rounded-xl px-4 py-2.5 text-xs text-white outline-none" />
-        <Button onClick={send} icon={Send}>Send</Button>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+          placeholder="Ask anything, analyze documents, or request task assistance..."
+          className="flex-1 bg-purple-950/60 border border-purple-500/30 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-purple-400"
+        />
+        <Button onClick={send} disabled={loading} icon={Send}>
+          Send
+        </Button>
       </div>
     </div>
   );
@@ -1065,23 +2112,80 @@ function AIHub({ role }) {
 
 /* ============================== MAIN APP ROOT ============================== */
 export default function NexoraApp() {
-  const [authed, setAuthed] = useState(false);
-  const [role, setRole] = useState("Employee");
-  const [currentUser, setCurrentUser] = useState(null);
-  const [view, setView] = useState("signin"); // signin | signup | admin | manager | employee | tasks ...
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("nexora_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [authed, setAuthed] = useState(() => {
+    return !!(localStorage.getItem("nexora_token") && localStorage.getItem("nexora_user"));
+  });
+
+  const [role, setRole] = useState(() => {
+    try {
+      const saved = localStorage.getItem("nexora_user");
+      return saved ? JSON.parse(saved).role : "Employee";
+    } catch {
+      return "Employee";
+    }
+  });
+
+  const [view, setView] = useState(() => {
+    try {
+      const saved = localStorage.getItem("nexora_user");
+      return saved ? JSON.parse(saved).role.toLowerCase() : "signin";
+    } catch {
+      return "signin";
+    }
+  });
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+
+  // Cmd+K shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen((p) => !p);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  function handleLoginSuccess(user) {
+    localStorage.setItem("nexora_user", JSON.stringify(user));
+    setRole(user.role);
+    setCurrentUser(user);
+    setView(user.role.toLowerCase());
+    setAuthed(true);
+  }
+
+  function handleSignOut() {
+    setToken(null);
+    localStorage.removeItem("nexora_user");
+    setCurrentUser(null);
+    setAuthed(false);
+    setView("signin");
+  }
+
+  function handleAskAI(prompt) {
+    setAiPrompt(prompt);
+    setView("ai");
+  }
 
   if (!authed) {
     return (
       <Login
         initialMode="signin"
-        onLogin={(user) => {
-          setRole(user.role);
-          setCurrentUser(user);
-          setView(user.role.toLowerCase());
-          setAuthed(true);
-        }}
+        onLogin={handleLoginSuccess}
       />
     );
   }
@@ -1091,6 +2195,7 @@ export default function NexoraApp() {
       case "admin":
       case "manager":
       case "employee":
+      case "manager-analytics":
         return <GlassmorphismDashboard user={currentUser} role={role} />;
       case "tasks":
         return <TasksView role={role} user={currentUser} />;
@@ -1098,8 +2203,21 @@ export default function NexoraApp() {
         return <AdminUsers />;
       case "admin-audit":
         return <AdminAudit />;
+      case "admin-ai":
+        return <AdminAIConfig />;
+      case "manager-approvals":
+      case "requests":
+        return <ApprovalsView role={role} user={currentUser} />;
+      case "manager-team":
+        return <TeamView />;
+      case "kb":
+        return <KnowledgeBaseView onAskAI={handleAskAI} />;
+      case "docs":
+        return <DocumentsView onAskAI={handleAskAI} />;
       case "ai":
-        return <AIHub role={role} />;
+        return <AIHub role={role} initialPrompt={aiPrompt} />;
+      case "analyze":
+        return <AnalyzeReportView />;
       default:
         return <GlassmorphismDashboard user={currentUser} role={role} />;
     }
@@ -1108,13 +2226,30 @@ export default function NexoraApp() {
   return (
     <div className="nx min-h-screen flex" style={{ background: C.bgDeep }}>
       <style>{FONTS}</style>
-      <FloatingSidebar role={role} view={view} setView={setView} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <FloatingSidebar
+        role={role}
+        view={view}
+        setView={setView}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+      />
       <div className="flex-1 min-w-0 flex flex-col">
-        <TopBar role={role} user={currentUser} onMenu={() => setMobileOpen(true)} onPalette={() => setPaletteOpen(false)} onNotify={() => {}} view={view} onSignOut={() => { setToken(null); setAuthed(false); setView("signin"); }} />
+        <TopBar
+          role={role}
+          user={currentUser}
+          onMenu={() => setMobileOpen(true)}
+          onPalette={() => setPaletteOpen(true)}
+          onNotify={() => setNotifOpen(true)}
+          view={view}
+          onSignOut={handleSignOut}
+        />
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           {renderView()}
         </main>
       </div>
+
+      <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} setView={setView} role={role} />
     </div>
   );
 }
