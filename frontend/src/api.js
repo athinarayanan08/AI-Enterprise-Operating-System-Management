@@ -76,6 +76,21 @@ export const api = {
 
   // Dashboard
   getDashboard: (role) => request(`/api/dashboard/${role.toLowerCase()}`),
+  getAnalytics: (params) => {
+    const q = new URLSearchParams(params || {}).toString();
+    return request(`/api/dashboard/analytics${q ? `?${q}` : ""}`);
+  },
+  generateReport: (params) => {
+    const q = new URLSearchParams(params || {}).toString();
+    return request(`/api/dashboard/report${q ? `?${q}` : ""}`);
+  },
+
+  // Knowledge Base & Documents
+  getKnowledgeBase: (search = "") =>
+    request(`/api/knowledge${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  getDocuments: (search = "") =>
+    request(`/api/documents${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  uploadDocument: (payload) => request("/api/documents", { method: "POST", body: payload }),
 };
 
 export { getToken, setToken };

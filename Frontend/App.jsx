@@ -1,5 +1,6 @@
-import Nexora from './Nexora'
+import Nexora from './src/Nexora'
 
 export default function App() {
-  return <NOVA />
+  return <Nexora />
 }
+

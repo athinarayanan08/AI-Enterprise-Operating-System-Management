@@ -14,12 +14,18 @@ function serializeUser(u) {
   return rest;
 }
 
-// Admin sees everyone; Manager sees only their own department.
-router.get("/", authenticate, requireRole("Admin", "Manager"), (req, res) => {
+// Admin sees everyone; Manager and Employee can view their team / directory.
+router.get("/", authenticate, (req, res) => {
   let rows;
-  if (req.user.role === "Manager") {
-    rows = db.prepare("SELECT * FROM users WHERE dept = ?").all(req.user.dept);
+  if (req.user.role === "Admin") {
+    rows = db.prepare("SELECT * FROM users").all();
+  } else if (req.user.role === "Manager") {
+    rows = db.prepare("SELECT * FROM users WHERE dept = ? OR dept = ''").all(req.user.dept);
   } else {
+    rows = db.prepare("SELECT * FROM users WHERE dept = ? OR dept = ''").all(req.user.dept);
+  }
+  // If department returned empty (e.g. general company view), return all users
+  if (!rows || rows.length === 0) {
     rows = db.prepare("SELECT * FROM users").all();
   }
   res.json(rows.map(serializeUser));

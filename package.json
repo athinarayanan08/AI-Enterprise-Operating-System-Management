@@ -1,0 +1,18 @@
+{
+  "name": "ai-enterprise-os-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEXORA - AI Enterprise Operating System Management",
+  "scripts": {
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,magenta\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start": "concurrently -n \"backend,frontend\" -c \"blue,magenta\" \"npm run start --prefix backend\" \"npm run dev --prefix frontend\"",
+    "backend": "npm run dev --prefix backend",
+    "frontend": "npm run dev --prefix frontend",
+    "seed": "npm run seed --prefix backend",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
