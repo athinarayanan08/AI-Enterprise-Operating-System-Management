@@ -35,8 +35,8 @@ router.get("/", authenticate, (req, res) => {
   res.json(rows);
 });
 
-// POST /api/tasks (Admin or Manager)
-router.post("/", authenticate, requireRole("Admin", "Manager"), (req, res) => {
+// POST /api/tasks (Admin, Manager, or Employee)
+router.post("/", authenticate, (req, res) => {
   const {
     title,
     type = "Project Work",

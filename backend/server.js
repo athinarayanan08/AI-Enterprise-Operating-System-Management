@@ -1,13 +1,3 @@
-/**
- * Nexora backend — Express entrypoint.
- * Each router below is a self-contained module matching one frontend
- * component, so any one of them can be modified/replaced without
- * touching the others.
- *
- * Run locally:
- *   npm run seed   (once, to populate demo data)
- *   npm run dev    (starts with auto-restart on file changes)
- */
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -21,16 +11,24 @@ const chatRoutes = require("./routes/chat");
 const notificationsRoutes = require("./routes/notifications");
 const dashboardRoutes = require("./routes/dashboard");
 const tasksRoutes = require("./routes/tasks");
+const knowledgeRoutes = require("./routes/knowledge");
+const docsRoutes = require("./routes/docs");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
-// Allow the Vite dev server (default port 5173) to call this API during development.
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like curl/scripts) or any localhost/127.0.0.1 port
+      if (!origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
@@ -46,6 +44,8 @@ app.use("/api/tasks", tasksRoutes);
 app.use("/api", chatRoutes); // exposes /api/conversations and /api/chat
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/knowledge", knowledgeRoutes);
+app.use("/api/documents", docsRoutes);
 
 // Centralized error handler — keeps every route's try/catch minimal
 app.use((err, req, res, next) => {

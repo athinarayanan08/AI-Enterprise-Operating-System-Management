@@ -9,15 +9,30 @@ const { authenticate, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/", authenticate, requireRole("Admin", "Manager"), (req, res) => {
+router.get("/", authenticate, (req, res) => {
   const statusFilter = req.query.status || "Pending";
+  const { role, name } = req.user;
   let rows;
-  if (statusFilter && statusFilter !== "All") {
-    rows = db
-      .prepare("SELECT * FROM approvals WHERE status = ? ORDER BY created_at DESC")
-      .all(statusFilter);
+
+  if (role === "Admin" || role === "Manager") {
+    if (statusFilter && statusFilter !== "All") {
+      rows = db
+        .prepare("SELECT * FROM approvals WHERE status = ? ORDER BY created_at DESC")
+        .all(statusFilter);
+    } else {
+      rows = db.prepare("SELECT * FROM approvals ORDER BY created_at DESC").all();
+    }
   } else {
-    rows = db.prepare("SELECT * FROM approvals ORDER BY created_at DESC").all();
+    // Employees can view their own submitted requests
+    if (statusFilter && statusFilter !== "All") {
+      rows = db
+        .prepare("SELECT * FROM approvals WHERE requester_name = ? AND status = ? ORDER BY created_at DESC")
+        .all(name, statusFilter);
+    } else {
+      rows = db
+        .prepare("SELECT * FROM approvals WHERE requester_name = ? ORDER BY created_at DESC")
+        .all(name);
+    }
   }
   res.json(rows);
 });
